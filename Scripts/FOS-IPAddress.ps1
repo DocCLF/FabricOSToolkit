@@ -27,7 +27,7 @@ function FOS_IPAddrSet {
     begin{
         <#This block is used to provide optional one-time preprocessing for the function. The PowerShell runtime uses the code in this block once for each instance of the function in the pipeline.#>
         # Dafault settings based on Brocade Doku
-        Write-Debug -Message "Begin block startet |$(Get-Date)"
+        Write-Debug -Message "Begin block |$(Get-Date)"
         [ipaddress]$Temp_UserIPAddr="10.77.77.70"
         [int]$Temp_UserSubMPrefix="16"
         [ipaddress]$Default_FOSIPAddr="127.0.0.1"
@@ -68,7 +68,7 @@ function FOS_IPAddrSet {
                             Write-Error $_.Exception.Message
                         }
                         Write-Debug -Message "Check if the default Brocade IP $Default_FOSIPAddr is reachable.|$(Get-Date)"
-                        $job = Test-Connection $Default_FOSIPAddr -Count 1
+                        $job = Test-Connection $Default_FOSIPAddr -Count 1 -ErrorAction SilentlyContinue
                         if($($job.status) -eq "Success") {
                             Write-Host "Verification with $($job.status) completed. " -ForegroundColor Green
                             Write-Debug -Message "Test-Connect to switch with $($job.status) and set productive IP-Config to the Switch |$(Get-Date)" -ErrorAction SilentlyContinue
@@ -91,12 +91,13 @@ function FOS_IPAddrSet {
                             Write-Host "Restart the network adapter, you will lose the network connection." -ForegroundColor Blue
                             $results = Restart-NetAdapter -InterfaceAlias Ethernet -AsJob
                             Start-Sleep -Seconds 5;
-                            Write-Debug -Message "Restart done, $results" -ErrorAction SilentlyContinue
+                            Write-Debug -Message "Restart done, $results |$(Get-Date)" -ErrorAction SilentlyContinue
                             #Wait-Job -Id $results.Id
                             Start-Sleep -Seconds 5;
-                            Write-Host $results.state -ForegroundColor Yellow
+                            Write-Host $results.state -ForegroundColor Blue
                             Start-Sleep -Seconds 3;
                             Write-Host "We are finished, you can continue with the next step.`nYou can reach the switch under $SAN_ProdIPAddr, $SAN_ProdGW, $CIDR" -ForegroundColor Blue
+                            Write-Debug -Message "IP Config done $(Get-Date)"
                             break
                         } else {
                             Start-Sleep -Seconds 2;
@@ -108,8 +109,11 @@ function FOS_IPAddrSet {
                 Default {Write-Host "`nYou have probably made a mistake, try again.`n" -ForegroundColor Red}
             }
         }while ($User_decision -notin @('n','no'))
+        Write-Debug -Message "Process block done |$(Get-Date)"
     }
     end{
         <#This block is used to provide optional one-time post-processing for the function.#>
+        Write-Debug -Message "End block |$(Get-Date)"
     }
+
 }
