@@ -1,7 +1,7 @@
 using namespace System.Net
 
 Write-Host "Attention the 'function FOS_IPAddrSet' requires administrator rights, without these rights your IP config cannot be customized and the script runs into an error!" -ForegroundColor Red
-function FOS_IPAddrSet {
+function FOS_Switch_IPAddrSet {
     <#
         .DESCRIPTION
         Many text in here
@@ -30,7 +30,7 @@ function FOS_IPAddrSet {
         Write-Debug -Message "Begin block |$(Get-Date)"
         [ipaddress]$Temp_UserIPAddr="10.77.77.70"
         [int]$Temp_UserSubMPrefix="16"
-        [ipaddress]$Default_FOSIPAddr="127.0.0.1"
+        [ipaddress]$Default_FOSIPAddr="10.77.77.77"
         $Current_UserIPAddr
     }
     process {
@@ -49,7 +49,7 @@ function FOS_IPAddrSet {
             #$User_decision=Read-Host -Prompt "Please enter a selection"
             switch ($User_decision) {
                 "y" { 
-                        # Save Useres curent IPAddr maybe for later, the importend thing here is the InterfaceIndex.
+                        # Save Useres current IPAddr maybe for later, the importend thing here is the InterfaceIndex.
                         $Current_UserIPAddr = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Ethernet) |Select-Object IPAddress, PrefixLength, InterfaceIndex
                         Write-Debug -Message "User current IP configuration $Current_UserIPAddr |$(Get-Date)" -ErrorAction SilentlyContinue
                         #is not necessary, but even a system needs a break from time to time
