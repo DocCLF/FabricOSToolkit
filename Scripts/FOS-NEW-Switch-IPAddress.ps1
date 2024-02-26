@@ -1,16 +1,17 @@
 using namespace System.Net
 
 Write-Host "Attention the 'function FOS_IPAddrSet' requires administrator rights, without these rights your IP config cannot be customized and the script runs into an error!" -ForegroundColor Red
-function FOS_Switch_IPAddrSet {
+function FOS_NEW_Switch_IPAddrSet {
     <#
         .DESCRIPTION
-        Many text in here
-
+        Setting a Static IP Address
+        Use this Command to set a static IP address on a NEW the Switch
         .EXAMPLE
-        FOS_newIPAddrSet -ip 10120012
+        FOS_NEW_Switch_IPAddrSet -SAN_ProdIPAddr 10.10.15.23 -SAN_ProdGW 10.10.15.1 -SAN_ProdSubNet 255.255.255.0 -SAN_DHCP off
         
         .LINK
-        goggel if you can
+        Brocade® G730 Switch Hardware Installation Guide
+        https://techdocs.broadcom.com/us/en/fibre-channel-networking/switches/g730-switch/1-0/v25857540/GUID-CECEE437-3618-4BBF-BB80-1F9DE5F09E2D_1/GUID-5739CC68-2907-4C0D-9A24-EAC0B1A415B5_1.html
     #>
     [CmdletBinding()]
     param (
