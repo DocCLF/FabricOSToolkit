@@ -1,6 +1,5 @@
 using namespace System.Net
 
-
 function FOS_NEW_Director_CP_IPAddrSet {
     <#
         .DESCRIPTION
@@ -63,6 +62,7 @@ function FOS_NEW_Director_CP_IPAddrSet {
     }
     end{
         <#This block is used to provide optional one-time post-processing for the function.#>
+        Clear-Variable CP_* -Scope Local;
         Write-Debug -Message "End block |$(Get-Date)"
     }
 

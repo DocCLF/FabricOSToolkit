@@ -50,6 +50,7 @@ function FOS_NEW_Director_Chassis_IPAddrSet {
     }
     end{
         <#This block is used to provide optional one-time post-processing for the function.#>
+        Clear-Variable CH_* -Scope Local;
         Write-Debug -Message "End block |$(Get-Date)"
     }
 

@@ -114,6 +114,8 @@ function FOS_NEW_Switch_IPAddrSet {
     }
     end{
         <#This block is used to provide optional one-time post-processing for the function.#>
+        Clear-Variable SAN_* -Scope Local;
+        Clear-Variable Temp_* -Scope Local;
         Write-Debug -Message "End block |$(Get-Date)"
     }
 
