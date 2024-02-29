@@ -35,11 +35,11 @@ function FOS_Alias_Details {
         $AliasEntrys= @()
         $AliasCollection = @()
 
-        Write-Debug -Message "Aliasliste`n $AliasList, `nAliasEntrys`n $AliasEntrys, `nAliasCount`n $AliasCount "
+        Write-Debug -Message "Aliasliste`n $AliasList, `nAliasEntrys`n $AliasEntrys, `nAliasCount`n $AliasCollection "
         
     }
     process{
-        Write-Debug -Message "Process block |$(Get-Date)"
+        Write-Debug -Message "Start of Process block |$(Get-Date)"
         # Creat a list of Aliase with WWPN based on the decision by AliasName, with a "wildcard" there is only a list similar Aliasen or without a Aliasname there will be all Aliases of the cfg in the List.
         switch ($AliasName) {
             "" {
@@ -61,11 +61,11 @@ function FOS_Alias_Details {
                 $AliasCount = $AliasList.count - 1
 
                 0..$AliasCount |ForEach-Object {
-                    if($AliasList[$_] -like $AliasName){
+                    if($AliasList[$_] -match '^ alias'){
                         $AliasEntrys += $_
                     }
                 }
-                Write-Debug -Message "Aliasliste`n $AliasList, `nAliasName`n $AliasName, `nAliasEntrys`n $AliasEntrys"
+                Write-Debug -Message "Aliasliste`n $AliasList, `nAliasName`n $AliasName, `nAliasEntrys`n $AliasEntrys, `nAliasCount`n $AliasCount "
 
             }
         }
@@ -90,11 +90,11 @@ function FOS_Alias_Details {
                 $Alias_TempCollection.WWN = ($Alias_TempCollection.WWN).replace(":","")
                 $AliasCollection += $Alias_TempCollection
             }
-            #$AliasCollection
+            $AliasCollection
 
-            Write-Host "Here the list of Aliases with WWPN:`n $AliasCollection" -ForegroundColor Green
+            Write-Host "Here the list of Aliases with WWPN:`n" -ForegroundColor Green
 
-            Write-Debug -Message $AliasCollection
+            Write-Debug -Message "End of Process block |$(Get-Date)"
 
         }else {
              <# Action when all if and elseif conditions are false #>

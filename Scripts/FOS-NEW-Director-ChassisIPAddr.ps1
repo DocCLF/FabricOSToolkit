@@ -6,6 +6,7 @@ function FOS_NEW_Director_Chassis_IPAddrSet {
         .DESCRIPTION
         The device requires three IP addresses, which are configured using the ipAddrSet command. 
         IP addresses are required for both CP blades (CP0 and CP1) and for chassis management (shown as SWITCH under the ipAddrShow command) in the device.
+        Default IP Address for directors: 10.77.77.77 (mgmt), 10.77.77.75 (cp0), 10.77.77.74 (cp1)
 
         The addresses 10.0.0.0 through 10.0.0.255 are reserved and used internally by the device. 
         External IPs must not use these addresses.

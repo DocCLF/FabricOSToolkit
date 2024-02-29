@@ -9,9 +9,11 @@ function FOS_Alias_ADDorREM {
         .EXAMPLE
         To add a WWPN to an alias
         FOS_aliadd -AliasFunc aliadd -UserName admin -SwitchIP 10.10.10.25 -AliasName Array1 -AliasWWPN 21:00:00:20:37:0c:66:23
+        If the promt shows you nothing, type y and press enter
 
         To remove a WWPN to an alias
         FOS_aliadd -AliasFunc aliremove -UserName admin -SwitchIP 10.10.10.25 -AliasName Array1 -AliasWWPN 21:00:00:20:37:0c:66:23 
+        If the promt shows you nothing, type y and press enter
 
         .LINK
         Brocade® Fabric OS® Command Reference Manual, 9.1.x
@@ -20,7 +22,7 @@ function FOS_Alias_ADDorREM {
     param (
         [Parameter(Mandatory)]
         [ValidateSet("aliadd","aliremove")]
-        [string]$AliasFunc,
+        [string]$AliFunc,
         [Parameter(Mandatory,ValueFromPipeline)]
         [string]$UserName,
         [Parameter(Mandatory,ValueFromPipeline)]
@@ -35,18 +37,25 @@ function FOS_Alias_ADDorREM {
         #give them a default name
         [string]$AliasObject="DummyName"
         $result = ssh $UserName@$($SwitchIP) alishow $AliasName
-        Write-Debug -Message $result
+        Write-Debug -Message "$($result.count)"
+        # gt because *.count, counts all entrys like, (alias <aliasname> <aliaswwpn>) thats why gt 3
+        if(($result.count) -gt 3){
+            Write-Host "More than one alias was found please make a more accurate selection.`n $result"
+            break
+        }
+        Write-Debug -Message "$result"
         $AliasObject = (($result).Trim() -split "`t")[1]
-        Write-Debug -Message $AliasObject
+        Write-Debug -Message "$AliasObject"
     }
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
-        switch ($AliasFunc) {
+
+        switch ($AliFunc) {
             "aliadd" {         
                 if($AliasName -eq $AliasObject){
-                    Write-Host "all fine" -ForegroundColor Green
-                    $endResult = ssh $UserName@$($SwitchIP) "$AliasFunc ""$AliasName"",""$AliasWWPN""; cfgsave "
-                    Write-Debug -Message $endResult
+                    Write-Host "Add this $AliasWWPN to this $AliasObject ." -ForegroundColor Green
+                    $endResult = ssh $UserName@$($SwitchIP) "$AliFunc ""$AliasName"",""$AliasWWPN"" && cfgsave"
+                    Write-Debug -Message "$endResult"
                 }else {
                      <# Action when all if and elseif conditions are false #>
                     Write-Host "Something wrong, $AliasName is not epual $AliasObject or $AliasName was not found. " -ForegroundColor red
@@ -55,9 +64,9 @@ function FOS_Alias_ADDorREM {
             }
             "aliremove" {
                 if($AliasName -eq $AliasObject){
-                    Write-Host "all fine" -ForegroundColor Green
-                    $endResult = ssh $UserName@$($SwitchIP) "$AliasFunc ""$AliasName"",""$AliasWWPN""; cfgsave "
-                    Write-Debug -Message $endResult
+                    Write-Host "Remove this $AliasWWPN from this $AliasObject ." -ForegroundColor Green
+                    $endResult = ssh $UserName@$($SwitchIP) "$AliFunc ""$AliasName"",""$AliasWWPN"" && cfgsave "
+                    Write-Debug -Message "$endResult"
                 }else {
                      <# Action when all if and elseif conditions are false #>
                     Write-Host "Something wrong, $AliasName is not epual $AliasObject or $AliasName was not found. " -ForegroundColor red
@@ -68,7 +77,9 @@ function FOS_Alias_ADDorREM {
         }
     }
     end{
-        Clear-Variable Alias* -Scope Local;
+        Write-Host "All done!" -ForegroundColor Green
         Write-Debug -Message "End block |$(Get-Date)"
+        Clear-Variable Alias* -Scope Local;
+        Clear-Variable Name result
     }
 }

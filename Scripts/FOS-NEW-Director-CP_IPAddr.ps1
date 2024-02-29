@@ -5,9 +5,10 @@ function FOS_NEW_Director_CP_IPAddrSet {
         .DESCRIPTION
         The device requires three IP addresses, which are configured using the ipAddrSet command. 
         IP addresses are required for both CP blades (CP0 and CP1) and for chassis management (shown as SWITCH under the ipAddrShow command) in the device.
-
+        
         CP_Blade = Control Processor Blades
         The default IP addresses and host names for the device are: 
+        10.77.77.77 (mgmt)
         10.77.77.75 / CP0 (the CP blade in slot 1 at the time of configuration)
         10.77.77.74 / CP1 (the CP blade in slot 2 at the time of configuration)
         .EXAMPLE
