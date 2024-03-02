@@ -46,12 +46,14 @@ function FOS_CFG_Backup {
     )
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
+        # Collect all variables for an overview
         Write-Debug -Message "UserName: $UserName, SwitchIP: $SwitchIP,`n CFG_Type: $CFG_Type, Protocol: $Protocol, Protocol_Port: $Protocol_Port,`n Ext_Host_IP: $Ext_Host_IP, Ext_UserName: $Ext_UserName, Ext_Path_FileName: $Ext_Path_FileName, Ext_Pwd: $Ext_Pwd "
     }
     process{
         Write-Debug -Message "Start of Process block |$(Get-Date)"
         switch ($Protocol) {
             {$_ -eq ("scp" -or "sftp")} {
+                # Not the best solution but one that works, performance and code cleanup come at the very end!
                 Write-Debug -Message "Protocol: $Protocol |$(Get-Date)"
                 if(($Protocol_Port -and $Ext_Pwd) -ne ""){
                     $endResult = ssh $UserName@$($SwitchIP) "configupload -$CFG_Type -$Protocol -P $Protocol_Port $Ext_Host_IP,$Ext_UserName,$Ext_Path_FileName,$Ext_Pwd"
@@ -84,7 +86,3 @@ function FOS_CFG_Backup {
         Write-Debug -Message "End block |$(Get-Date)"
     }
 }
-
-configupload -all -scp host(ip),user,config.txt,password
-
-configupload -all -scp as
