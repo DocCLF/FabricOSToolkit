@@ -66,6 +66,72 @@ function FOS_NTP_Server {
     }    
 }
 
+function FOS_Syslog_Server {
+    <#
+    .DESCRIPTION
+    Configures a syslog server host.
+
+    .EXAMPLE
+    To display all syslog IP addresses configured on a switch:
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand show
+    
+    To configure an IPv4/6 or hostname non-secure syslog server:
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand set -SyslogSrv win2k2-58-113
+
+    To remove the IPv4/6 address or hostname from the list of servers to which error log messages are sent:
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand remove -SyslogSrv 10.20.30.40
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ValidateSet("show","set","remove")]
+        [string]$Operand,
+        [Parameter(ValueFromPipeline)]
+        [string]$SyslogSrv
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+
+        if((($Operand -eq "set") -or ($Operand -eq "remove")) -and ($SyslogSrv -eq "")){
+            Write-Host "$Operand needs the SyslogSrv parameter " -ForegroundColor Red
+            Write-Debug -Message "$Operand and $FabricName are set, leave the func | $(Get-Date)"
+            break
+        }
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+
+        switch ($Operand) {
+            "show" { 
+                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip" 
+            }
+            "remove" { 
+                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip $SyslogSrv" 
+            }
+            "set" { 
+                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip $SyslogSrv" 
+            }
+            Default {Write-Host "Oops, something went wrong" -ForegroundColor Red
+            break
+            }
+        }
+
+        Write-Debug -Message "$endResult"
+    }
+    end{
+            Write-Debug -Message "End block $(Get-Date)"
+            Write-Host "$endResult" -ForegroundColor Green
+    }    
+    
+}
+
 function FOS_Set_Sw_Ch_Names {
     <#
     .DESCRIPTION
@@ -142,7 +208,7 @@ function FOS_Fabric_Names {
         [Parameter(Mandatory,ValueFromPipeline)]
         [ValidateSet("show","set","clear")]
         [string]$Operand,
-        [Parameter(Mandatory,ValueFromPipeline)]
+        [Parameter(ValueFromPipeline)]
         [string]$FabricName
     )
     begin{
@@ -167,7 +233,9 @@ function FOS_Fabric_Names {
             "set" { 
                 $endResult = ssh $UserName@$($SwitchIP) "fabricname --$Operand $FabricName" 
             }
-            Default {}
+            Default {Write-Host "Oops, something went wrong" -ForegroundColor Red
+            break
+            }
         }
 
         Write-Debug -Message "$endResult"
