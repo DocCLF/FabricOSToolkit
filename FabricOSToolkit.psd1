@@ -69,7 +69,7 @@ Description = 'The module should support you in dealing with your Brocade SAN en
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @("FOS_NEW_Switch_IPAddrSet","FOS_NEW_Director_Chassis_IPAddrSet","FOS_NEW_Director_CP_IPAddrSet","FOS_Alias_ADDorREM","FOS_Alias_Details","FOS_NTP_Server","FOS_CFG_Backup","FOS_Syslog_Server","FOS_Set_Sw_Ch_Names","FOS_Fabric_Names")
+FunctionsToExport = '*'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = '*'

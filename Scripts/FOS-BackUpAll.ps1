@@ -94,7 +94,7 @@ function FOS_CFG_Backup {
     }
     end{
         # clear the most of the used vars
-        Clear-Variable Alias* -Scope Local;
+        Clear-Variable Ext_* -Scope Local;
         Clear-Variable *esult -Scope Local;
         Write-Debug -Message "End block |$(Get-Date)"
     }
