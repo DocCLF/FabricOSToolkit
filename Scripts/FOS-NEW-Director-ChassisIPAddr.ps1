@@ -1,6 +1,5 @@
 using namespace System.Net
 
-#Write-Host "Attention the 'function FOS_IPAddrSet' requires administrator rights, without these rights your IP config cannot be customized and the script runs into an error!" -ForegroundColor Red
 function FOS_NEW_Director_Chassis_IPAddrSet {
     <#
         .DESCRIPTION
