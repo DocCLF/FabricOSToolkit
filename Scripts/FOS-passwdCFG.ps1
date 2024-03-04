@@ -9,15 +9,19 @@ function FOS_Set_passwdCfg {
     - Password expiration policy
     - Account lockout policy
 
+    Values that are not set are set with the default values!
+    All displayable, nonalphanumeric punctuation characters, except the colon (:), are allowed.
+
     .EXAMPLE
-    
-    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30 
+    This Password policy is set to min length of 12 characters with a minimum of 2 lower and 1 upper case alphabetic characters, 2 digits and a max passwordage of 184 days.
+    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -minlength 12 -lowercase 2 -uppercase 1 -digits 2 -maxpasswordage 184
 
-    
-    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30 
+    This Password policy is set to min passwordage of 92 days and max passwordage of 184 days with 3 warnings. 
+    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -minpasswordage 92 -maxpasswordage 184 -warning 3
 
-    
-    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30
+    Expires the password for all users. Users will be prompted for a password change at the next successful login.
+    Expire can only be used alone!
+    FOS_Set_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -expire y
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -41,7 +45,7 @@ function FOS_Set_passwdCfg {
         [Int32]$digits = 1,
         [Parameter(ValueFromPipeline)]
         [Int32]$punctuation = 0,
-        [Parameter(Mandatory,ValueFromPipeline)]
+        [Parameter(ValueFromPipeline)]
         [ValidateLength(10,40)]
         [Int32]$minlength = 10, #The total of -lowercase, -uppercase, -digits, and -punctuation must be less than or equal to the -minlength <value>! Also, the total of -digits and -charset must be less than or equal to the -minlength <value>.
         [Parameter(ValueFromPipeline)]
@@ -74,8 +78,9 @@ function FOS_Set_passwdCfg {
         [Parameter(ValueFromPipeline)]
         [ValidateSet(1,0)]
         [Int32]$reverse = 1,
-        [Parameter()]
-        $expire
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("y","n")]
+        [string]$expire = "n"
     )
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
@@ -126,12 +131,153 @@ function FOS_Set_passwdCfg {
     }
     process{
         Write-Debug -Message "Start of Process block |$(Get-Date)"
-        $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set -charset $charset -allowuser $allowuser -lowercase $lowercase -uppercase $uppercase -digits $digits -punctuation $punctuation -minlength $minlength -history $history -minDiff $minDiff -minpasswordage $minpasswordage -maxpasswordage $maxpasswordage -warning $warning -lockoutthreshold $lockoutthreshold -lockoutduration $lockoutduration -repeat $repeat -sequence $sequence -reverse $reverse" 
+        if($expire -eq "y"){
+            Write-Host "Expires the password for all users. Users will be prompted for a password change at the next successful login." -ForegroundColor Green
+            $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set -expire"
+        }else{
+            $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set -charset $charset -allowuser $allowuser -lowercase $lowercase -uppercase $uppercase -digits $digits -punctuation $punctuation -minlength $minlength -history $history -minDiff $minDiff -minpasswordage $minpasswordage -maxpasswordage $maxpasswordage -warning $warning -lockoutthreshold $lockoutthreshold -lockoutduration $lockoutduration -repeat $repeat -sequence $sequence -reverse $reverse" 
+        }
         $pw_newCFG
         Write-Debug -Message " $pw_newCFG "
     }
     end{
         Write-Debug -Message "End block |$(Get-Date)"
+    }
+    
+}
+
+function FOS_Set_User_passwdCfg {
+    <#
+    .DESCRIPTION
+    Use this command to manage password policies like:
+    - Password strength policy
+    - Password history policy
+    - Password expiration policy
+    - Account lockout policy
+
+    Values that are not set are set with the default values!
+    All displayable, nonalphanumeric punctuation characters, except the colon (:), are allowed.
+
+    .EXAMPLE
+    This Password policy is set to min passwordage of 92 days and max passwordage of 184 days with 3 warnings. 
+    FOS_Set_User_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -FOS_user user -minpasswordage 92 -maxpasswordage 184 -warning 3
+
+    Expires the password for all users. Users will be prompted for a password change at the next successful login.
+    Expire can only be used alone!
+    FOS_Set_User_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -FOS_user user -expire y
+
+    To display the current user password expiration policy parameters:
+    FOS_Set_User_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -FOS_user user -Operands showuser
+
+    To delete the password configurations for a specific user:
+    FOS_Set_User_passwdCfg -UserName admin -SwitchIP 10.10.10.30 -FOS_user user -Operands deleteuser
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$FOS_user,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("showuser","deleteuser")]
+        [string]$Operands,
+        [Parameter(ValueFromPipeline)]
+        [ValidateLength(0,999)]
+        [Int32]$minpasswordage = 0,
+        [Parameter(ValueFromPipeline)]
+        [ValidateLength(0,999)]
+        [Int32]$maxpasswordage = 0,
+        [Parameter(ValueFromPipeline)]
+        [ValidateLength(0,999)]
+        [Int32]$warning = 0,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("y","n")]
+        [string]$expire = "n"
+    )
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        if($maxpasswordage -lt $minpasswordage){
+            Write-Host "The minpasswordage must be set to a value less than or equal to maxpasswordage, your entry for minpasswordage is $minpasswordage and for maxpasswordage is $maxpasswordage."
+            Write-Debug -Message "$($minpasswordage) > $maxpasswordage "
+            break
+        }else {
+            <# Action when all if and elseif conditions are false #>
+            Write-Debug -Message "Password age check successfully completed $($minpasswordage) < $maxpasswordage !"
+        }
+    }
+    process{
+        Write-Debug -Message "Start of Process block |$(Get-Date)"
+        switch ($Operands) {
+            "showuser" { 
+                Write-Host "Display the $FOS_user password expiration policy parameters:" -ForegroundColor Green
+                $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --showuser $FOS_user" 
+            }
+            "deleteuser" { 
+                Write-Host "Delete the password configurations for $FOS_user :" -ForegroundColor Red
+                $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --deleteuser $FOS_user" 
+            }
+            Default {
+                if($expire -eq "y"){
+                    Write-Host "Expires the password for $FOS_user. $FOS_user will be prompted for a password change at the next successful login." -ForegroundColor Green
+                    $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --setuser $FOS_user -expire"
+                }else{
+                    $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --setuser $FOS_user -minpasswordage $minpasswordage -maxpasswordage $maxpasswordage -warning $warning " 
+                }
+            }
+        }
+        $pw_newCFG
+        Write-Debug -Message " $pw_newCFG "
+    }
+    end{
+        Write-Debug -Message "End block |$(Get-Date)"
+    }
+    
+}
+
+function FOS_Set_Default_passwdCfg {
+    <#
+    .DESCRIPTION
+    Resets all password policies to their default values.
+
+    .EXAMPLE
+    FOS_Set_Default_passwdCfg -UserName admin -SwitchIP 10.10.10.30 
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+    )
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        # the current police settings
+        $pw_currentCFG = ssh $UserName@$($SwitchIP) "passwdcfg --showall" 
+        $pw_currentCFG
+        Write-Debug -Message " $pw_currentCFG "
+    }
+    process{
+        Write-Debug -Message "Start of Process block |$(Get-Date)"
+        # Resets all password policies to their default values.
+        $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --setdefault"
+
+        $pw_newCFG
+        Write-Debug -Message " $pw_newCFG "
+    }
+    end{
+        Write-Debug -Message "End block |$(Get-Date)"
+        # the current police settings
+        $pw_resetCFG = ssh $UserName@$($SwitchIP) "passwdcfg --showall" 
+        $pw_resetCFG
     }
     
 }
