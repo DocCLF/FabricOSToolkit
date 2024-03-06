@@ -50,19 +50,20 @@ function FOS_NTP_Server {
         Write-Debug -Message "Process block $(Get-Date)"
 
         if(($NTP_Server -eq "") -or ($NTP_Show -notlike "show*")){
-            $endResult = ssh $UserName@$($SwitchIP) "tsclockserver"
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "tsclockserver"
         }
         elseif($NTP_Show -notlike "show*"){
-            $endResult = ssh $UserName@$($SwitchIP) "tsclockserver ""$NTP_Server"" "
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "tsclockserver ""$NTP_Server"" "
         }else {
-            $endResult = ssh $UserName@$($SwitchIP) "tsclockserver --$NTP_Show "
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "tsclockserver --$NTP_Show "
         }
-        Write-Debug -Message "$endResult"
+        Write-Debug -Message "$FOS_endResult"
     }
     end{
             Write-Debug -Message "End block $(Get-Date)"
             Clear-Variable NTP_Se* -Scope Local;
-            Write-Host "$endResult" -ForegroundColor Green
+            Write-Host "$FOS_endResult" -ForegroundColor Green
+            Clear-Variable FOS* -Scope Local;
     }    
 }
 
@@ -73,13 +74,13 @@ function FOS_Syslog_Server {
 
     .EXAMPLE
     To display all syslog IP addresses configured on a switch:
-    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand show
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 FOS_Operand show
     
     To configure an IPv4/6 or hostname non-secure syslog server:
-    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand set -SyslogSrv win2k2-58-113
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 FOS_Operand set -SyslogSrv win2k2-58-113
 
     To remove the IPv4/6 address or hostname from the list of servers to which error log messages are sent:
-    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 -Operand remove -SyslogSrv 10.20.30.40
+    FOS_Syslog_Server -UserName admin -SwitchIP 10.10.10.30 FOS_Operand remove -SyslogSrv 10.20.30.40
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -92,42 +93,43 @@ function FOS_Syslog_Server {
         [ipaddress]$SwitchIP,
         [Parameter(Mandatory,ValueFromPipeline)]
         [ValidateSet("show","set","remove")]
-        [string]$Operand,
+        [string]$FOS_Operand,
         [Parameter(ValueFromPipeline)]
         [string]$SyslogSrv
     )
     begin{
         Write-Debug -Message "Begin block $(Get-Date)"
 
-        if((($Operand -eq "set") -or ($Operand -eq "remove")) -and ($SyslogSrv -eq "")){
-            Write-Host "$Operand needs the SyslogSrv parameter " -ForegroundColor Red
-            Write-Debug -Message "$Operand and $FabricName are set, leave the func | $(Get-Date)"
+        if((($FOS_Operand -eq "set") -or ($FOS_Operand -eq "remove")) -and ($SyslogSrv -eq "")){
+            Write-Host "$FOS_Operand needs the SyslogSrv parameter " -ForegroundColor Red
+            Write-Debug -Message "$FOS_Operand and $FabricName are set, leave the func | $(Get-Date)"
             break
         }
     }
     process{
         Write-Debug -Message "Process block $(Get-Date)"
 
-        switch ($Operand) {
+        switch ($FOS_Operand) {
             "show" { 
-                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip" 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$FOS_Operand -ip" 
             }
             "remove" { 
-                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip $SyslogSrv" 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$FOS_Operand -ip $SyslogSrv" 
             }
             "set" { 
-                $endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$Operand -ip $SyslogSrv" 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "syslogadmin --$FOS_Operand -ip $SyslogSrv" 
             }
             Default {Write-Host "Oops, something went wrong" -ForegroundColor Red
             break
             }
         }
 
-        Write-Debug -Message "$endResult"
+        Write-Debug -Message "$FOS_endResult"
     }
     end{
             Write-Debug -Message "End block $(Get-Date)"
-            Write-Host "$endResult" -ForegroundColor Green
+            Write-Host "$FOS_endResult" -ForegroundColor Green
+            Clear-Variable FOS* -Scope Local;
     }    
     
 }
@@ -170,13 +172,14 @@ function FOS_Set_Sw_Ch_Names {
     process{
         Write-Debug -Message "Process block $(Get-Date)"
 
-        $endResult = ssh $UserName@$($SwitchIP) "switchname $SwitchName && chassisname $ChassisName "
+        $FOS_endResult = ssh $UserName@$($SwitchIP) "switchname $SwitchName && chassisname $ChassisName "
 
-        Write-Debug -Message "$endResult"
+        Write-Debug -Message "$FOS_endResult"
     }
     end{
             Write-Debug -Message "End block $(Get-Date)"
-            Write-Host "$endResult" -ForegroundColor Green
+            Write-Host "$FOS_endResult" -ForegroundColor Green
+            Clear-Variable FOS* -Scope Local;
     }    
     
 }
@@ -188,13 +191,13 @@ function FOS_Fabric_Names {
 
     .EXAMPLE
     To display the fabric name:
-    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 -Operand show
+    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 FOS_Operand show
     
     To set fabric name:
-    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 -Operand set -FabricName newfabric
+    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 FOS_Operand set -FabricName newfabric
 
     To clear the fabric name already set:
-    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 -Operand clear
+    FOS_Fabric_Names -UserName admin -SwitchIP 10.10.10.30 FOS_Operand clear
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -207,42 +210,139 @@ function FOS_Fabric_Names {
         [ipaddress]$SwitchIP,
         [Parameter(Mandatory,ValueFromPipeline)]
         [ValidateSet("show","set","clear")]
-        [string]$Operand,
+        [string]$FOS_Operand,
         [Parameter(ValueFromPipeline)]
         [string]$FabricName
     )
     begin{
         Write-Debug -Message "Begin block $(Get-Date)"
 
-        if((($Operand -eq "show") -or ($Operand -eq "clear")) -and ($FabricName -ne "")){
-            Write-Host "$Operand does not work in combination with $FabricName " -ForegroundColor Red
-            Write-Debug -Message "$Operand and $FabricName are set, leave the func | $(Get-Date)"
+        if((($FOS_Operand -eq "show") -or ($FOS_Operand -eq "clear")) -and ($FabricName -ne "")){
+            Write-Host "$FOS_Operand does not work in combination with $FabricName " -ForegroundColor Red
+            Write-Debug -Message "$FOS_Operand and $FabricName are set, leave the func | $(Get-Date)"
             break
         }
     }
     process{
         Write-Debug -Message "Process block $(Get-Date)"
 
-        switch ($Operand) {
+        switch ($FOS_Operand) {
             "show" { 
-                $endResult = ssh $UserName@$($SwitchIP) "fabricname --$Operand " 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "fabricname --$FOS_Operand " 
             }
             "clear" { 
-                $endResult = ssh $UserName@$($SwitchIP) "fabricname --$Operand " 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "fabricname --$FOS_Operand " 
             }
             "set" { 
-                $endResult = ssh $UserName@$($SwitchIP) "fabricname --$Operand $FabricName" 
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "fabricname --$FOS_Operand $FabricName" 
             }
             Default {Write-Host "Oops, something went wrong" -ForegroundColor Red
             break
             }
         }
 
-        Write-Debug -Message "$endResult"
+        Write-Debug -Message "$FOS_endResult"
     }
     end{
             Write-Debug -Message "End block $(Get-Date)"
-            Write-Host "$endResult" -ForegroundColor Green
+            Write-Host "$FOS_endResult" -ForegroundColor Green
+            Clear-Variable FOS* -Scope Local;
     }    
     
+}
+
+function FOS_Roles_Show {
+        <#
+    .DESCRIPTION
+    Displays information about the specified roles. For each role, the command displays the role name,
+    description, assigned classes and RBAC permissions for each class.
+
+    .EXAMPLE
+    To display the fabric name:
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        $FOS_endResult = ssh $UserName@$($SwitchIP) "roleconfig --show -all -default" 
+
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Local;
+    }
+    
+}
+
+function FOS_Roles_Permissions {
+    <#
+    .DESCRIPTION
+    Displays information about the specified roles. For each role, the command displays the role name,
+    description, assigned classes and RBAC permissions for each class.
+
+    .EXAMPLE
+    Displays permissions for all classes.
+    FOS_Roles_Permissions -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand all
+
+    Display an alphabetical listing of all MOF classes supported in Fabric OS:
+    FOS_Roles_Permissions -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand classlist
+
+    Display the RBAC permissions for the commands included in the UserManagement class
+    FOS_Roles_Permissions -UserName admin -SwitchIP 10.10.10.30 FOS_ClassName UserManagement
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("all","classlist")]
+        [string]$FOS_Operand,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_ClassName
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Operand,$FOS_ClassName"
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        switch ($FOS_Operand) {
+            "all" { 
+                if($FOS_ClassName -ne ""){Write-Host "It is not allowed to use $FOS_Operand with $FOS_ClassName!" -ForegroundColor Red ; break }
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "classconfig --show -$FOS_Operand"  
+            }
+            "classlist" { 
+                if($FOS_ClassName -ne ""){Write-Host "It is not allowed to use $FOS_Operand with $FOS_ClassName!" -ForegroundColor Red ; break }
+                $FOS_endResult = ssh $UserName@$($SwitchIP) "classconfig --show -$FOS_Operand"
+            }
+            Default {$FOS_endResult = ssh $UserName@$($SwitchIP) "classconfig --show $FOS_ClassName" }
+        }
+
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Local;
+    }
+
 }
