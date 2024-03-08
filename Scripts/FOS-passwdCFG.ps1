@@ -267,8 +267,7 @@ function FOS_Set_Default_passwdCfg {
         [Parameter(Mandatory,ValueFromPipeline)]
         [string]$UserName,
         [Parameter(Mandatory,ValueFromPipeline)]
-        [ipaddress]$SwitchIP,
-        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP
     )
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
