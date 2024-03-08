@@ -188,8 +188,10 @@ function FOS_User_Modify {
         Write-Debug -Message "$UserName,$SwitchIP,$FOS_Operand,$FOS_UserName,$FOS_FID,$FOS_Role,$FOS_passwd"
         if(($FOS_UserName -eq (("admin")-or("user")-or("maintenance")))-and ($FOS_Operand -eq "delete")){Write-Host "The following names can neither be deleted, because these are default accounts: admin, user, maintenance" -ForegroundColor red; break}
         # To be on the safe side, the user is shown a list of all accounts here.
-        FOS_User_Show -UserName $UserName -SwitchIP $SwitchIP -FOS_Operand a
-
+        $FOS_used_user = FOS_User_Show -UserName $UserName -SwitchIP $SwitchIP -FOS_Operand a
+        $FOS_used_user
+        Write-Debug -Message "Inused User:`n $FOS_used_user" -ErrorAction SilentlyContinue
+        
         $FOS_TempArray=@($FOS_FID ,$FOS_Role ,$FOS_ChasRole,$FOS_passwd)
         $FOS_Flag=@("-l","-r","-c","-p")
         for ($i = 0; $i -lt $FOS_TempArray.Count; $i++) {

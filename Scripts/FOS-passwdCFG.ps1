@@ -33,51 +33,51 @@ function FOS_Set_passwdCfg {
         [Parameter(Mandatory,ValueFromPipeline)]
         [ipaddress]$SwitchIP,
         [Parameter(ValueFromPipeline)]
-        [Int32]$charset = 0,
+        [Int32]$charset,
         [Parameter(ValueFromPipeline)]
         [ValidateSet("yes","no")]
         [string]$allowuser = "no",
         [Parameter(ValueFromPipeline)]
-        [Int32]$lowercase = 1,
+        [Int32]$lowercase,
         [Parameter(ValueFromPipeline)]
-        [Int32]$uppercase = 1,
+        [Int32]$uppercase,
         [Parameter(ValueFromPipeline)]
-        [Int32]$digits = 1,
+        [Int32]$digits,
         [Parameter(ValueFromPipeline)]
-        [Int32]$punctuation = 0,
+        [Int32]$punctuation,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(10,40)]
         [Int32]$minlength = 10, #The total of -lowercase, -uppercase, -digits, and -punctuation must be less than or equal to the -minlength <value>! Also, the total of -digits and -charset must be less than or equal to the -minlength <value>.
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,24)]
-        [Int32]$history =1,
+        [Int32]$history,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,40)]
-        [Int32]$minDiff = 0,
+        [Int32]$minDiff,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,999)]
-        [Int32]$minpasswordage = 0,
+        [Int32]$minpasswordage,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,999)]
-        [Int32]$maxpasswordage = 0,
+        [Int32]$maxpasswordage,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,999)]
-        [Int32]$warning = 0,
+        [Int32]$warning,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,999)]
-        [Int32]$lockoutthreshold = 3,
+        [Int32]$lockoutthreshold,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(0,99999)]
-        [Int32]$lockoutduration = 5,
+        [Int32]$lockoutduration,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(1,40)]
-        [Int32]$repeat = 1,
+        [Int32]$repeat,
         [Parameter(ValueFromPipeline)]
         [ValidateLength(1,40)]
-        [Int32]$sequence = 1,
+        [Int32]$sequence,
         [Parameter(ValueFromPipeline)]
         [ValidateSet(1,0)]
-        [Int32]$reverse = 1,
+        [Int32]$reverse,
         [Parameter(ValueFromPipeline)]
         [ValidateSet("y","n")]
         [string]$expire = "n"
@@ -127,7 +127,19 @@ function FOS_Set_passwdCfg {
         # show the current password configuration parameters:
         $pw_currentCFG = ssh $UserName@$($SwitchIP) "passwdcfg --showall" 
         $pw_currentCFG
-        Write-Debug -Message " $pw_currentCFG "
+        Write-Debug -Message " $pw_currentCFG " -ErrorAction SilentlyContinue
+
+        $FOS_TempArray=@($charset, $allowuser, $lowercase, $uppercase, $digits, $punctuation, $minlength, $history, $minDiff, $minpasswordage, $maxpasswordage, $warning, $lockoutthreshold, $lockoutduration, $repeat, $sequence, $reverse)
+        $FOS_Flag=@("-charset", "-allowuser", "-lowercase", "-uppercase", "-digits", "-punctuation", "-minlength", "-history", "-minDiff", "-minpasswordage", "-maxpasswordage", "-warning", "-lockoutthreshold", "-lockoutduration", "-repeat", "-sequence", "-reverse")
+        for ($i = 0; $i -lt $FOS_TempArray.Count; $i++) {
+            # Create a list of operands with their values and put them in the correct order
+            if([string]::IsNullOrEmpty($FOS_TempArray[$i])){
+                Write-Debug -Message "$($FOS_Flag[$i]) $($FOS_TempArray[$i]) are empty"
+            }else{
+                Write-Debug -Message "$($FOS_Flag[$i]) $($FOS_TempArray[$i])"
+                $FOS_List += "$($FOS_Flag[$i]) $($FOS_TempArray[$i]) "
+            }
+        }
     }
     process{
         Write-Debug -Message "Start of Process block |$(Get-Date)"
@@ -135,7 +147,7 @@ function FOS_Set_passwdCfg {
             Write-Host "Expires the password for all users. Users will be prompted for a password change at the next successful login." -ForegroundColor Green
             $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set -expire"
         }else{
-            $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set -charset $charset -allowuser $allowuser -lowercase $lowercase -uppercase $uppercase -digits $digits -punctuation $punctuation -minlength $minlength -history $history -minDiff $minDiff -minpasswordage $minpasswordage -maxpasswordage $maxpasswordage -warning $warning -lockoutthreshold $lockoutthreshold -lockoutduration $lockoutduration -repeat $repeat -sequence $sequence -reverse $reverse" 
+            $pw_newCFG = ssh $UserName@$($SwitchIP) "passwdcfg --set $FOS_List" 
         }
         $pw_newCFG
         Write-Debug -Message " $pw_newCFG "
