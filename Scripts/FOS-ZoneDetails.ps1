@@ -24,7 +24,15 @@ function FOS_Zone_Details {
         [Parameter(Mandatory,ValueFromPipeline)]
         [ipaddress]$SwitchIP,
         [Parameter(ValueFromPipeline)]
-        [string]$FOS_ZoneName
+        [ValidateSet("ic","validate","peerzone","alias")]
+        [string]$FOS_Operand,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_ZoneName,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_AliasName,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("0","1","2")]
+        [Int16]$FOS_Mode = 3
     )
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
@@ -33,37 +41,80 @@ function FOS_Zone_Details {
         $FOS_ZoneEntrys= @()
         $FOS_ZoneCollection = @()
 
-        Write-Debug -Message "Aliasliste`n $FOS_ZoneList, `nAliasEntrys`n $FOS_ZoneEntrys, `nAliasCount`n $FOS_ZoneCollection "
+        Write-Debug -Message "Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCollection "
         
     }
     process{
         Write-Debug -Message "Start of Process block |$(Get-Date)"
         # Creat a list of Aliase with WWPN based on the decision by AliasName, with a "wildcard" there is only a list similar Aliasen or without a Aliasname there will be all Aliases of the cfg in the List.
-        switch ($AliasName) {
-            "" {
+        switch ($FOS_Operand) {
+            "ic" {
 
-                $AliasList = ssh $UserName@$($SwitchIP) "alishow"
-                $AliasCount = $AliasList.count - 1
+                $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --ic ""$FOS_ZoneName"""
+                $FOS_ZoneCount = $FOS_ZoneList.count - 1
 
-                0..$AliasCount |ForEach-Object {
-                    if($AliasList[$_] -match '^ alias'){
-                        $AliasEntrys += $_
+                0..$FOS_ZoneCount |ForEach-Object {
+                    if($FOS_ZoneList[$_] -match '^ zone'){
+                        $FOS_ZoneEntrys += $_
                     }
                 }
-                Write-Debug -Message "Aliasliste`n $AliasList, `nAliasEntrys`n $AliasEntrys, `nAliasCount`n $AliasCount "
+                Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
 
             }
-            Default {
+            "validate" { 
+                if($FOS_Mode -le 2){
+                    $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" ,mode $FOS_Mode"
+                }else{
+                    $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" "
+                }
+                $FOS_ZoneCount = $FOS_ZoneList.count - 1
 
-                $AliasList = ssh $UserName@$($SwitchIP) "alishow --ic ""$AliasName"""
-                $AliasCount = $AliasList.count - 1
-
-                0..$AliasCount |ForEach-Object {
-                    if($AliasList[$_] -match '^ alias'){
-                        $AliasEntrys += $_
+                0..$FOS_ZoneCount |ForEach-Object {
+                    if($FOS_ZoneList[$_] -match '^ zone'){
+                        $FOS_ZoneEntrys += $_
                     }
                 }
-                Write-Debug -Message "Aliasliste`n $AliasList, `nAliasName`n $AliasName, `nAliasEntrys`n $AliasEntrys, `nAliasCount`n $AliasCount "
+                
+                Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, FilterMode $FOS_Mode`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
+             }
+            "peerzone" { 
+                if($FOS_Mode -le 2){
+                    $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --peerzone all -mode $FOS_Mode"
+                }else{
+                    $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --peerzone all "
+                }
+                $FOS_ZoneCount = $FOS_ZoneList.count - 1
+
+                0..$FOS_ZoneCount |ForEach-Object {
+                    if($FOS_ZoneList[$_] -match '^ zone'){
+                        $FOS_ZoneEntrys += $_
+                    }
+                }
+                
+                Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, FilterMode $FOS_Mode`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
+             }
+            "alias" { 
+                $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --alias ""$FOS_AliasName"""
+                $FOS_ZoneCount = $FOS_ZoneList.count - 1
+
+                0..$FOS_ZoneCount |ForEach-Object {
+                    if($FOS_ZoneList[$_] -match '^ zone'){
+                        $FOS_ZoneEntrys += $_
+                    }
+                }
+                Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchAliasName: $FOS_AliasName`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
+             }
+            Default {
+
+                $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow"
+                $FOS_ZoneCount = $FOS_ZoneList.count - 1
+
+                0..$FOS_ZoneCount |ForEach-Object {
+                    if($FOS_ZoneList[$_] -match '^ zone'){
+                        $FOS_ZoneEntrys += $_
+                    }
+                }
+                Write-Debug -Message "FOS_Operand Default`n, Search: zoneshow`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
 
             }
         }
@@ -71,24 +122,24 @@ function FOS_Zone_Details {
         Start-Sleep -Seconds 3;
 
         # Creat a List of Aliases with WWPN based on switch-case decision
-        if(($AliasEntrys.count) -ge 1){
+        if(($FOS_ZoneEntrys.count) -ge 1){
             #Create PowerShell Objects out of the Aliases
-            foreach ($AliasEntry in $AliasEntrys) {
-                $Alias_TempCollection = "" | Select-Object Alias,WWN
-                if (($AliasList[$AliasEntry].trim() -split "`t").count -gt 2){
+            foreach ($FOS_ZoneEntry in $FOS_ZoneEntrys) {
+                $FOS_TempCollection = "" | Select-Object Zone,Alias
+                if (($FOS_ZoneList[$FOS_ZoneEntry].trim() -split "`t").count -gt 2){
                     #Line has Alias and WWN on same line
-                    $Alias_TempCollection.Alias = (($AliasList[$AliasEntry]).trim() -split "`t")[1]
-                    $Alias_TempCollection.WWN = (($AliasList[$AliasEntry]).trim() -split "`t")[2]
+                    $FOS_TempCollection.Zone = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[1]
+                    $FOS_TempCollection.Alias = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[2]
                 }else{
                     #Line has Alias and WWN on adjascent lines
-                    $Alias_TempCollection.Alias = (($AliasList[$AliasEntry]).trim() -split "`t")[1]
-                    $Alias_TempCollection.WWN = $AliasList[$AliasEntry+1].trim()
+                    $FOS_TempCollection.Zone = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[1]
+                    $FOS_TempCollection.Alias = $FOS_ZoneList[$FOS_ZoneEntry+1].trim()
                 }
                 #remove the colons to make it easier to compare to the PowerCLI output
-                $Alias_TempCollection.WWN = ($Alias_TempCollection.WWN).replace(":","")
-                $AliasCollection += $Alias_TempCollection
+                #$FOS_TempCollection.WWN = ($FOS_TempCollection.WWN).replace(":","")
+                $FOS_ZoneCollection += $FOS_TempCollection
             }
-            $AliasCollection
+            $FOS_ZoneCollection
 
             Write-Host "Here the list of Aliases with WWPN:`n" -ForegroundColor Green
 
@@ -96,15 +147,14 @@ function FOS_Zone_Details {
 
         }else {
              <# Action when all if and elseif conditions are false #>
-            Write-Host "Something wrong, $AliasName was not found. " -ForegroundColor red
-            Write-Debug -Message "Some Infos: $AliasName, AliasEntry count: $($AliasEntrys.count), $AliasEntrys"
+            Write-Host "Something wrong, notthing was not found. " -ForegroundColor red
+            Write-Debug -Message "Some Infos: notthing was found, ZoneEntry count: $($FOS_ZoneEntrys.count), $FOS_ZoneEntrys"
         }
 
     }
     end{
         # clear the most of the used vars
-        Clear-Variable Alias* -Scope Local;
-        Clear-Variable *esult -Scope Local;
+        Clear-Variable FOS_* -Scope Local;
         Write-Debug -Message "End block |$(Get-Date)"
     }
 }
