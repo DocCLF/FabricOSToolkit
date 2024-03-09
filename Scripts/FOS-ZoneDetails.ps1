@@ -3,17 +3,32 @@ using namespace System.Net
 function FOS_Zone_Details {
         <#
         .DESCRIPTION
-        Use the following procedure to add or remove a wwpn to an alias
-        Enter the "cfgSave" command to save the change to the defined configuration.
+        Use this command to display zone configuration information. 
+        This command includes sorting and search options to customize the output. 
+        If a pattern is specified, the command displays only matching zone configuration names in the defined configuration. 
+        When used without operands, the command displays all zone configuration information for the Defined and the Effective configuration.
 
         .EXAMPLE
-        zoneshow --ic "GREEN*"
+        Display all green zones using pattern search, regardless of the case:
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand ic -FOS_ZoneName Green*
 
-        zoneshow --validate ,mode [0,1,2]
+        Display validated output for zone members beginning with "zone"
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand validate FOS_ZoneName zone*
 
-        zoneshow --peerzone all
+        Display validated output for zone members of effective zone configuration, cann be used with or without ZoneName
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand validate FOS_Mode 2
 
-        zoneshow --peerzone all -mode [0,1,2]
+        Displays configuration information for all Peer Zones
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand peerzone
+
+        Displays configuration information for all Peer Zones, with specifies mode
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand validate FOS_Mode 2
+
+        Display the zone members of aliases beginning with "ali1":
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand alias -FOS_AliasName ali1*
+
+        Display all zones
+        FOS_Zone_Details -UserName admin -SwitchIP 10.10.10.25
         .LINK
         Brocade® Fabric OS® Command Reference Manual, 9.2.x
         https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
