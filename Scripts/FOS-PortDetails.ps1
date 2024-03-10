@@ -59,8 +59,7 @@ function FOS_Port_CFG_Details {
 function FOS_Port_Perf_Show {
     <#
     .DESCRIPTION
-    Use this command to display the current configuration of a port. 
-    The behavior of this command is platform-specific; output varies depending on port type and platform, and not all options are supported on all platforms.
+    Use this command to display throughput information for all ports on a switch or chassis or to display the information for a specified port or port range.
 
     .EXAMPLE
     To display performance information for all ports at a one second (default) interval:
@@ -126,6 +125,49 @@ function FOS_Port_Perf_Show {
         Write-Debug -Message "Process block |$(Get-Date)"
 
         $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portperfshow $FOS_List"
+        
+    }
+    end{
+        Write-Debug -Message "End block |$(Get-Date)"
+        $FOS_PortInfo
+        Write-Debug -Message "Resault: $FOS_PortInfo |$(Get-Date)"
+        Clear-Variable FOS* -Scope Local;
+    }
+}
+
+function FOS_Port_Show {
+    <#
+    .DESCRIPTION
+    Displays status and configuration parameters for ports.
+
+    .EXAMPLE
+    Specifies the number of the port to be displayed, relative to its slot for chassis-based systems.
+    FOS_Port_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_Port 6
+
+    Use FOS_Switch_Show for a listing of valid port numbers.
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [Int16]$FOS_Port
+    )
+    
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port"
+    }
+
+    process{
+        Write-Debug -Message "Process block |$(Get-Date)"
+
+        $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portperfshow $FOS_Port"
         
     }
     end{
