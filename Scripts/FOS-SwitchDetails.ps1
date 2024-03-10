@@ -116,3 +116,60 @@ function FOS_Switch_SensorShow {
         Write-Debug -Message "End block |$(Get-Date)"
     }
 }
+
+function FOS_Switch_Show {
+    <#
+    .DESCRIPTION
+    Use this command to display switch, blade, and port status information. Output may vary depending on the switch model.
+
+    .EXAMPLE
+    To display switch information
+    FOS_Switch_Show -UserName admin -SwitchIP 10.10.10.25
+
+    this should be added
+    switchshow -perftxrx
+
+    switchshow -portcount
+    switchshow -portname
+    
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.1.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-1-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("yes","no")]
+        [string]$CreateExportFile = "no",
+        [Parameter(ValueFromPipeline)]
+        [string]$ExportFile
+    )
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        # For later Update use the SwitchName instead of SwitchShow
+        $OnlineDevice="SwitchShow$(Get-Date -Format "yyyy-MM-HH-mm-ss").csv"
+        If($CreateExportFile -eq "yes"){
+            Write-Host "The default path for the export is $Env:TEMP, if you want to specify your own, please enter it below."
+            $ExportFile = Read-Host "Enter a path to the folder for the export "
+            if($ExportFile -eq ""){$ExportFile = $Env:TEMP}
+        }
+        
+    }
+    process{
+        Write-Debug -Message "Process block |$(Get-Date)"
+        $result = ssh $UserName@$($SwitchIP) "switchShow "
+        Start-Sleep -Seconds 3;
+        Write-Host "Here the Switch Show Report:`n" -ForegroundColor Green
+        $result
+        If($CreateExportFile -eq "yes"){
+        Export-Csv -Path $ExportFile\$OnlineDevice -InputObject $result -NoTypeInformation
+        }
+    }
+    end{
+        Clear-Variable -Name result;
+        Write-Debug -Message "End block |$(Get-Date)"
+    }
+}
