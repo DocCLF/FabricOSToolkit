@@ -38,7 +38,7 @@ function FOS_SFP_Details {
     
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
-        Write-Debug -Message "$UserName,$SwitchIP,$FOS_perf,$FOS_swname,$FOS_slotport"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_health,$FOS_Port"
         if(($FOS_health -ne "") -and ($FOS_Port -ne "")){Write-Host "FOS_health in combination with FOS_Port is not allowed" -ForegroundColor red; break}
     }
     process{
