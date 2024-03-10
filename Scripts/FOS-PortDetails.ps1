@@ -55,3 +55,83 @@ function FOS_Port_CFG_Details {
         Clear-Variable FOS* -Scope Local;
     }
 }
+
+function FOS_Port_Perf_Show {
+    <#
+    .DESCRIPTION
+    Use this command to display the current configuration of a port. 
+    The behavior of this command is platform-specific; output varies depending on port type and platform, and not all options are supported on all platforms.
+
+    .EXAMPLE
+    To display performance information for all ports at a one second (default) interval:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25
+    or
+    To display port performance for all ports with an interval of 5 seconds:
+    OS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 FOS_Port_Time 5
+
+    To display port performance on a chassis for one port:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_PortRange 0
+    or
+    To display port performance on a chassis for range of ports:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_PortRange 0-8
+
+    Displays the transmitter and receiver throughput with an interval of 5 seconds:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_PortRange 0-24 -FOS_Port_tx y -FOS_Port_rx y FOS_Port_Time 5
+    or
+    To display transmitter throughput for a single port at a 15 second interval:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_PortRange 8 -FOS_Port_tx yes FOS_Port_Time 15
+    or
+    To display receiver throughput for a range of port at a one second (default) interval:
+    FOS_Port_Perf_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_PortRange 0-1 -FOS_Port_rx y 
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_PortRange,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("yes","y")]
+        [string]$FOS_Port_tx,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("yes","y")]
+        [string]$FOS_Port_rx,
+        [Parameter(ValueFromPipeline)]
+        [int]$FOS_Port_Time
+
+    )
+    
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_PortRange,$FOS_Port_tx,$FOS_Port_rx,$FOS_Port_Time "
+        $FOS_TempArray=@($FOS_PortRange,$FOS_Port_tx,$FOS_Port_rx,$FOS_Port_Time)
+        $FOS_Flag=@("$FOS_PortRange ", "-tx ", "-rx ", "-t $FOS_Port_Time")
+        for ($i = 0; $i -lt $FOS_TempArray.Count; $i++) {
+            # Create a list of operands with their values and put them in the correct order
+            if([string]::IsNullOrEmpty($FOS_TempArray[$i])){
+                Write-Debug -Message "$($FOS_Flag[$i]) $($FOS_TempArray[$i]) are empty"
+            }else{
+                Write-Debug -Message "$($FOS_Flag[$i]) $($FOS_TempArray[$i])"
+                $FOS_List += "$($FOS_Flag[$i])"
+            }
+        }
+    }
+
+    process{
+        Write-Debug -Message "Process block |$(Get-Date)"
+
+        $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portperfshow $FOS_List"
+        
+    }
+    end{
+        Write-Debug -Message "End block |$(Get-Date)"
+        $FOS_PortInfo
+        Write-Debug -Message "Resault: $FOS_PortInfo |$(Get-Date)"
+        Clear-Variable FOS* -Scope Local;
+    }
+}
