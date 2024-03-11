@@ -423,3 +423,122 @@ function FOS_BuffertoBuffer_Calc {
     }
 
 }
+
+function FOS_CLI_History {
+    <#
+    .SYNOPSIS
+    Displays switch command history.
+    
+    .DESCRIPTION
+    Displays information about the specified roles. For each role, the command displays the role name,
+    description, assigned classes and RBAC permissions for each class.
+
+    .EXAMPLE
+    To display the command history on a switch:
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30
+
+    Displays the CLI history of the current user.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand show
+
+    Displays the CLI history of the given user.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand showuser -FOS_UserName Testuser
+
+    Displays the CLI history of all users.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand showall
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("show","showuser","showall")]
+        [string]$FOS_Operand,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_UserName
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        switch ($FOS_Operand) {
+            "show" { $FOS_endResult = ssh $UserName@$($SwitchIP) "clihistory --show"  }
+            "showuser" { $FOS_endResult = ssh $UserName@$($SwitchIP) "clihistory --showuser $FOS_UserName"  }
+            "showall" { $FOS_endResult = ssh $UserName@$($SwitchIP) "clihistory --showall"  }
+            Default {$FOS_endResult = ssh $UserName@$($SwitchIP) "clihistory "}
+        }
+        
+
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Global;
+    }
+
+}
+
+function FOS_Fabric_Show {
+    <#
+    .SYNOPSIS
+    Displays fabric membership information.
+
+    .DESCRIPTION
+    Use this command to display information about switches in the fabric.
+    If the switch is initializing or is disabled, the message "no fabric" is displayed.
+
+    .EXAMPLE
+    Use this command to display information about switches in the fabric.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30
+
+    Displays information about the chassis including chassis WWN and chassis name.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand chassis
+
+    Displays firmware version details for each domain.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand version
+
+    Displays the model and serial number of all the switches present in the fabric.
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand model
+
+    Displays the number of paths available to each remote domain. 
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand paths
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("chassis","paths","version","model")]
+        [string]$FOS_Operand
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        if($FOS_Operand = ""){
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "fabricshow"
+        }else{
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "fabricshow -$FOS_Operand "
+        }  
+
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Global;
+    }
+
+}
