@@ -349,52 +349,67 @@ function FOS_Roles_Permissions {
 
 function FOS_BuffertoBuffer_Calc {
     <#
+    .SYNOPSIS
+    Calculates the number of buffers required per port.
+
     .DESCRIPTION
     Displays information about the specified roles. For each role, the command displays the role name,
     description, assigned classes and RBAC permissions for each class.
 
     .EXAMPLE
     To display the fabric name:
-    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30
+    FOS_BuffertoBuffer_Calc -FOS_Distance 10 -FOS_Speed 16
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
     https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
     #>
     param (
-        [Parameter(ValueFromPipeline)]
-        [string]$UserName,
-        [Parameter(ValueFromPipeline)]
-        [ipaddress]$SwitchIP,
-        [Parameter(ValueFromPipeline)]
-        [Int32]$FOS_Port,
-        [Parameter(ValueFromPipeline)]
-        [ValidateRange(5-1500)]
+        [Parameter(Mandatory,ValueFromPipeline)]
         [Int32]$FOS_Distance,
-        [Parameter(ValueFromPipeline)]
+        [Parameter(Mandatory,ValueFromPipeline)]
         [ValidateSet(1,2,4,8,10,16,32,64)]
         [Int32]$FOS_Speed,
-        [Parameter(ValueFromPipeline)]
-        [ValidateSet(256,512,1024,2048)]
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ValidateSet(512,1024,2048)]
         [Int32]$FOS_Framesize
     )
     begin{
         Write-Debug -Message "Begin block $(Get-Date)"
-        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port,$FOS_Distance,$FOS_Speed,$FOS_Framesize"
+        Write-Debug -Message "UserName: $UserName, SwitchIP: $SwitchIP, FOS_Port: $FOS_Port, FOS_Distance: $FOS_Distance, FOS_Speed: $FOS_Speed, FOS_Framesize: $FOS_Framesize"
         # Buffer to Buffer Calc
-        $FOS_BufferResult = ($FOS_Distance*$FOS_Speed/2)+6
+        switch ($FOS_Framesize) {
+            512 { [int]$FOS_Framesize = 96}
+            1024 { [int]$FOS_Framesize = 32 }
+            2048 { [int]$FOS_Framesize = 0 }
+            Default {[int]$FOS_Framesize = 32}
+        }
+        $FOS_FrameMutliplikator
+        $FOS_BufferResult = (($FOS_Distance*$FOS_Speed/2)+$FOS_Framesize)+6
         Write-Debug -Message "Roleconfig: $FOS_BufferResult"
-        Write-Host "$FOS_BufferResult buffers required for $($FOS_Distance)km at $($FOS_Speed)G and framesize of $($FOS_Framesize)bytes`n" -ForegroundColor Green
-        Write-Host "`nPlease type one of the following options to send the Result to the SAN-Switch.`n" -ForegroundColor Green
+        Write-Host "$FOS_BufferResult buffers required for $($FOS_Distance)km at $($FOS_Speed)G and framesize of $($FOS_Framesize)bytes" -ForegroundColor Green
+        Write-Host "`nDo you want to add this Credits to change the default credit allocation for a normal E_Port or EX_port?" -ForegroundColor Green
         Write-Host "yes or y"
-        Write-Host "no or n (Default)'n"
-        $FOS_SendResult = Read-Host -prompt "Do you want to send the result to SAN-Switch [no]"
+        Write-Host "no or n (Default)`n"
+        $FOS_SendResult = Read-Host "Do you want to send the result to SAN-Switch [no]"
+
+        Write-Debug -Message "Begin block $(Get-Date) $FOS_SendResult"
         
     }
     process{
-        Write-Debug -Message "Process block $(Get-Date)"
-        if($FOS_SendResult -eq (("yes") -or ("y"))){
+
+        Write-Debug -Message "Process block $(Get-Date) $FOS_SendResult"
+        if($FOS_SendResult -like "y*"){
+            [string]$UserName = Read-Host "Admin Username "
+            [ipaddress]$SwitchIP = Read-Host "Switch IP "
+            [int]$FOS_Port = Read-Host "Port "
+            Write-Debug -Message "UserName: $UserName, SwitchIP: $SwitchIP, FOS_Port: $FOS_Port, FOS_Distance: $FOS_Distance, FOS_Speed: $FOS_Speed, FOS_Framesize: $FOS_Framesize, FOS_BufferResult: $FOS_BufferResult"
+
             $FOS_endResult = ssh $UserName@$($SwitchIP) "portcfgeportcredits --enable $FOS_Port $FOS_BufferResult"
+
+        }else{
+
+            break
         }
 
         $FOS_endResult
@@ -402,7 +417,7 @@ function FOS_BuffertoBuffer_Calc {
     }
     end{
         Write-Debug -Message "End block $(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 
 }

@@ -177,3 +177,58 @@ function FOS_Port_Show {
         Clear-Variable FOS* -Scope Local;
     }
 }
+
+function FOS_EPort_Credits {
+    <#
+    .SYNOPSIS
+    Displays zone information.
+    
+    .DESCRIPTION
+    Displays status and configuration parameters for ports.
+
+    .EXAMPLE
+    Specifies the number of the port to be displayed, relative to its slot for chassis-based systems.
+    FOS_EPort_Credits -UserName admin -SwitchIP 10.10.10.25 -FOS_Port 6
+
+    Use FOS_BuffertoBuffer_Calc to calculate credits.
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ValidateSet("enable","disable","show")]
+        [string]$FOS_Operand,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [int]$FOS_Port,
+        [Parameter(ValueFromPipeline)]
+        [int]$FOS_Credits
+    )
+    
+    begin{
+        Write-Debug -Message "Begin block |$(Get-Date)"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port"
+    }
+
+    process{
+        Write-Debug -Message "Process block |$(Get-Date)"
+
+        switch ($FOS_Operand) {
+            "disable" { $FOS_PortCredits = ssh $UserName@$($SwitchIP) "portcfgeportcredits --disable $FOS_Port" }
+            "show" { $FOS_PortCredits = ssh $UserName@$($SwitchIP) "portcfgeportcredits --show $FOS_Port" }
+            Default { $FOS_PortCredits = ssh $UserName@$($SwitchIP) "portcfgeportcredits --enable $FOS_Port $FOS_Credits" }
+        }
+        
+    }
+    end{
+        Write-Debug -Message "End block |$(Get-Date)"
+        $FOS_PortCredits
+        Write-Debug -Message "Resault: $FOS_PortCredits |$(Get-Date)"
+        Clear-Variable FOS* -Scope Global;
+    }
+}
