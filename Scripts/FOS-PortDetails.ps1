@@ -137,14 +137,23 @@ function FOS_Port_Perf_Show {
 
 function FOS_Port_Show {
     <#
-    .DESCRIPTION
+    .SYNOPSIS
     Displays status and configuration parameters for ports.
+
+    .DESCRIPTION
+    Stats means:    Displays port hardware statistics.
+    Buffer means:   Displays the buffer usage information for a port group or for all port groups in the switch.
+    by Default      Displays status and configuration parameters for ports.
+    
+    Use FOS_Switch_Show for a listing of valid port numbers.
 
     .EXAMPLE
     Specifies the number of the port to be displayed, relative to its slot for chassis-based systems.
     FOS_Port_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_Port 6
-
-    Use FOS_Switch_Show for a listing of valid port numbers.
+    .EXAMPLE
+    FOS_Port_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand stats -FOS_Port 6
+    .EXAMPLE
+    FOS_Port_Show -UserName admin -SwitchIP 10.10.10.25 -FOS_Operand buffer -FOS_Port 6
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -155,26 +164,33 @@ function FOS_Port_Show {
         [string]$UserName,
         [Parameter(Mandatory,ValueFromPipeline)]
         [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [Int16]$FOS_Port,
         [Parameter(ValueFromPipeline)]
-        [Int16]$FOS_Port
+        [ValidateSet("stats","buffer")]
+        [Int16]$FOS_Operand
     )
     
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
-        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Operand,$FOS_Port"
     }
 
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
 
-        $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portperfshow $FOS_Port"
+        switch ($FOS_Operand) {
+            "stats" { $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portstatsshow $FOS_Port" }
+            "buffer" { $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portbuffershow $FOS_Port" }
+            Default { $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portshow $FOS_Port" }
+        }
         
     }
     end{
         Write-Debug -Message "End block |$(Get-Date)"
         $FOS_PortInfo
         Write-Debug -Message "Resault: $FOS_PortInfo |$(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 }
 
@@ -182,7 +198,7 @@ function FOS_EPort_Credits {
     <#
     .SYNOPSIS
     Displays zone information.
-    
+
     .DESCRIPTION
     Displays status and configuration parameters for ports.
 

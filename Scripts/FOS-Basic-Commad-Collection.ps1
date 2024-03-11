@@ -358,7 +358,7 @@ function FOS_BuffertoBuffer_Calc {
 
     .EXAMPLE
     To display the fabric name:
-    FOS_BuffertoBuffer_Calc -FOS_Distance 10 -FOS_Speed 16
+    FOS_BuffertoBuffer_Calc -FOS_Distance 10 -FOS_Speed 16 -FOS_Framesize 1024
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -372,20 +372,22 @@ function FOS_BuffertoBuffer_Calc {
         [Int32]$FOS_Speed,
         [Parameter(Mandatory,ValueFromPipeline)]
         [ValidateSet(512,1024,2048)]
-        [Int32]$FOS_Framesize
+        [Int32]$FOS_Framesize,
+        [Parameter()]
+        [ParameterType]$FOS_FrameMutliplikator
     )
     begin{
         Write-Debug -Message "Begin block $(Get-Date)"
         Write-Debug -Message "UserName: $UserName, SwitchIP: $SwitchIP, FOS_Port: $FOS_Port, FOS_Distance: $FOS_Distance, FOS_Speed: $FOS_Speed, FOS_Framesize: $FOS_Framesize"
         # Buffer to Buffer Calc
         switch ($FOS_Framesize) {
-            512 { [int]$FOS_Framesize = 96}
-            1024 { [int]$FOS_Framesize = 32 }
-            2048 { [int]$FOS_Framesize = 0 }
-            Default {[int]$FOS_Framesize = 32}
+            512 { [int]$FOS_FrameMutliplikator = 96}
+            1024 { [int]$FOS_FrameMutliplikator = 32 }
+            2048 { [int]$FOS_FrameMutliplikator = 0 }
+            Default {[int]$FOS_FrameMutliplikator = 32}
         }
         $FOS_FrameMutliplikator
-        $FOS_BufferResult = (($FOS_Distance*$FOS_Speed/2)+$FOS_Framesize)+6
+        $FOS_BufferResult = (($FOS_Distance*$FOS_Speed/2)+$FOS_FrameMutliplikator)+6
         Write-Debug -Message "Roleconfig: $FOS_BufferResult"
         Write-Host "$FOS_BufferResult buffers required for $($FOS_Distance)km at $($FOS_Speed)G and framesize of $($FOS_Framesize)bytes" -ForegroundColor Green
         Write-Host "`nDo you want to add this Credits to change the default credit allocation for a normal E_Port or EX_port?" -ForegroundColor Green
