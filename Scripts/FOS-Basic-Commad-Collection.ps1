@@ -346,3 +346,63 @@ function FOS_Roles_Permissions {
     }
 
 }
+
+function FOS_BuffertoBuffer_Calc {
+    <#
+    .DESCRIPTION
+    Displays information about the specified roles. For each role, the command displays the role name,
+    description, assigned classes and RBAC permissions for each class.
+
+    .EXAMPLE
+    To display the fabric name:
+    FOS_Roles_Show -UserName admin -SwitchIP 10.10.10.30
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(ValueFromPipeline)]
+        [Int32]$FOS_Port,
+        [Parameter(ValueFromPipeline)]
+        [ValidateRange(5-1500)]
+        [Int32]$FOS_Distance,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet(1,2,4,8,10,16,32,64)]
+        [Int32]$FOS_Speed,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet(256,512,1024,2048)]
+        [Int32]$FOS_Framesize
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+        Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port,$FOS_Distance,$FOS_Speed,$FOS_Framesize"
+        # Buffer to Buffer Calc
+        $FOS_BufferResult = ($FOS_Distance*$FOS_Speed/2)+6
+        Write-Debug -Message "Roleconfig: $FOS_BufferResult"
+        Write-Host "$FOS_BufferResult buffers required for $($FOS_Distance)km at $($FOS_Speed)G and framesize of $($FOS_Framesize)bytes`n" -ForegroundColor Green
+        Write-Host "`nPlease type one of the following options to send the Result to the SAN-Switch.`n" -ForegroundColor Green
+        Write-Host "yes or y"
+        Write-Host "no or n (Default)'n"
+        $FOS_SendResult = Read-Host -prompt "Do you want to send the result to SAN-Switch [no]"
+        
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        if($FOS_SendResult -eq (("yes") -or ("y"))){
+            $FOS_endResult = ssh $UserName@$($SwitchIP) "portcfgeportcredits --enable $FOS_Port $FOS_BufferResult"
+        }
+
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Local;
+    }
+
+}
