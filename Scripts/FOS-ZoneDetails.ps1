@@ -78,6 +78,7 @@ function FOS_Zone_Details {
             }
             "validate" { 
                 if($FOS_Mode -le 2){
+                    Write-Host "If this command fails, then it is a known bug under FOS 9.x.x,`n if this is the case then use the command without FOS_Mode parameter" -ForegroundColor Red
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" ,mode $FOS_Mode"
                 }else{
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" "
