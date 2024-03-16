@@ -584,18 +584,18 @@ function FOS_USB_CFG {
     )
     begin{
         Write-Debug -Message "Begin block $(Get-Date)"
-        if(($FOS_Operand -eq "remove") -and($FOS_RM_File -eq "")){Write-Host "If you use the $FOS_Operand operator, you must specify a file or path of the file to be deleted." -ForegroundColor Red}
+        if(($FOS_Operand -eq "remove") -and($FOS_RM_File -eq "")){Write-Host "If you use the $FOS_Operand operator, you must specify a file or path of the file to be deleted." -ForegroundColor Red ; break}
     }
     process{
         Write-Debug -Message "Process block $(Get-Date)"
         Write-Debug -Message "Username: $Username, SwitchIP $SwitchIP, Operand: $Operand, Path/File to remove: $FOS_RM_File"
-        
+
         switch ($FOS_Operand) {
             "enable" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e" }
             "disable" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -d" }
             "remove" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e && usbstorage -r $FOS_RM_File && usbstorage -d" }
             "list" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e && usbstorage -l && usbstorage -d" }
-            Default { Write-Host "You have made a mistake, please check your input: Username: $Username, SwitchIP $SwitchIP, Operand: $Operand, Path/File to remove: $FOS_RM_File" -ForegroundColor Red }
+            Default { Write-Host "You have made a mistake, please check your input: Username: $Username, SwitchIP $SwitchIP, Operand: $Operand, Path/File to remove: $FOS_RM_File" -ForegroundColor Red ; break}
         }
         
         $FOS_endResult
