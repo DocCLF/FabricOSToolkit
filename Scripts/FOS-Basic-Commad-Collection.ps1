@@ -542,3 +542,68 @@ function FOS_Fabric_Show {
     }
 
 }
+
+function FOS_USB_CFG {
+    <#
+    .SYNOPSIS
+    Manages data files on an attached USB storage device.
+
+    .DESCRIPTION
+    Use this command to control a USB device attached to the Active CP. 
+    When the USB device is enabled, other applications, such as supportSave, firmwareDownload, 
+    or configDownload/configUpload can conveniently store and retrieve data from the attached storage device.
+
+    .EXAMPLE
+    Enables the USB device. The USB device must be enabled before the list and remove functions are available.
+    FOS_USB_CFG -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand enable
+
+    Disables an enabled USB device. This command prevents access to the device until it is enabled again.
+    FOS_USB_CFG -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand disable
+
+    To remove a firmware target from the firmware application area:
+    FOS_USB_CFG -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand remove -FOS_RM_File v9.1.2
+
+    Lists the content from the USB device or folder path in usbstorage.
+    FOS_USB_CFG -UserName admin -SwitchIP 10.10.10.30 -FOS_Operand list
+
+    .LINK
+    Brocade® Fabric OS® Command Reference Manual, 9.2.x
+    https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
+    #>
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [string]$UserName,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ipaddress]$SwitchIP,
+        [Parameter(Mandatory,ValueFromPipeline)]
+        [ValidateSet("enable","disable","remove","list")]
+        [string]$FOS_Operand,
+        [Parameter(ValueFromPipeline)]
+        [ValidateSet("enable","disable","remove","list")]
+        [string]$FOS_RM_File
+    )
+    begin{
+        Write-Debug -Message "Begin block $(Get-Date)"
+        if(($FOS_Operand -eq "remove") -and($FOS_RM_File -eq "")){Write-Host "If you use the $FOS_Operand operator, you must specify a file or path of the file to be deleted." -ForegroundColor Red}
+    }
+    process{
+        Write-Debug -Message "Process block $(Get-Date)"
+        Write-Debug -Message "Username: $Username, SwitchIP $SwitchIP, Operand: $Operand, Path/File to remove: $FOS_RM_File"
+        
+        switch ($FOS_Operand) {
+            "enable" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e" }
+            "disable" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -d" }
+            "remove" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e && usbstorage -r $FOS_RM_File && usbstorage -d" }
+            "list" { $FOS_endResult = ssh $UserName@$($SwitchIP) "usbstorage -e && usbstorage -l && usbstorage -d" }
+            Default { Write-Host "You have made a mistake, please check your input: Username: $Username, SwitchIP $SwitchIP, Operand: $Operand, Path/File to remove: $FOS_RM_File" -ForegroundColor Red }
+        }
+        
+        $FOS_endResult
+        Write-Debug -Message "Roleconfig: $FOS_endResult"
+    }
+    end{
+        Write-Debug -Message "End block $(Get-Date)"
+        Clear-Variable FOS* -Scope Global;
+    }
+
+}
