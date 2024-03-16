@@ -174,7 +174,7 @@ function FOS_Zone_Details {
     }
     end{
         # clear the most of the used vars
-        Clear-Variable FOS_* -Scope Local;
+        Clear-Variable FOS_* -Scope Global;
         Write-Debug -Message "End block |$(Get-Date)"
     }
 }

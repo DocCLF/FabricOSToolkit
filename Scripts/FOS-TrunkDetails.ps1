@@ -70,6 +70,6 @@ function FOS_Trunk_Details {
         Write-Debug -Message "End block |$(Get-Date)"
         $FOS_TrunkInfo
         Write-Debug -Message "Resault: $FOS_TrunkInfo |$(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 }
