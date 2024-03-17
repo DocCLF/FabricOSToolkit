@@ -26,7 +26,9 @@ function FOS_Port_CFG_Details {
         [Parameter(Mandatory,ValueFromPipeline)]
         [ipaddress]$SwitchIP,
         [Parameter(ValueFromPipeline)]
-        [int]$FOS_Port,
+        [string]$FOS_pw,
+        [Parameter(ValueFromPipeline)]
+        [string]$FOS_Port,
         [Parameter(ValueFromPipeline)]
         [string]$FOS_PortRange
 
@@ -35,11 +37,12 @@ function FOS_Port_CFG_Details {
     begin{
         Write-Debug -Message "Begin block |$(Get-Date)"
         Write-Debug -Message "$UserName,$SwitchIP,$FOS_Port,$FOS_PortRange"
-        if(($FOS_Port -ne "") -and ($FOS_PortInfo -ne "")){Write-Host "FOS_Port in combination with FOS_PortInfo is not allowed" -ForegroundColor red; break}
+        if(($FOS_Port -ne "") -and ($FOS_PortRange -ne "")){Write-Host "FOS_Port in combination with FOS_PortRange is not allowed" -ForegroundColor red; break}
     }
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
         if($FOS_Port -ne ""){
+            $FOS_PortInfo = plink $UserName@$SwitchIP -pw $FOS_pw -batch "portcfgshow $FOS_Port"
             $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portcfgshow $FOS_Port"
         }elseif($FOS_PortRange -ne ""){
             $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portcfgshow -i $FOS_PortRange"
@@ -52,7 +55,7 @@ function FOS_Port_CFG_Details {
         Write-Debug -Message "End block |$(Get-Date)"
         $FOS_PortInfo
         Write-Debug -Message "Resault: $FOS_PortInfo |$(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 }
 
@@ -120,12 +123,12 @@ function FOS_Port_Perf_Show {
             }
         }
     }
-
+    
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
-
+        <# Does not work because the session would have to remain open, a possible workaround would be to hook the -t interval into a loop and open a session again and again. 
         $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portperfshow $FOS_List"
-        
+        #>
     }
     end{
         Write-Debug -Message "End block |$(Get-Date)"
@@ -168,7 +171,7 @@ function FOS_Port_Show {
         [Int16]$FOS_Port,
         [Parameter(ValueFromPipeline)]
         [ValidateSet("stats","buffer")]
-        [Int16]$FOS_Operand
+        [string]$FOS_Operand
     )
     
     begin{
