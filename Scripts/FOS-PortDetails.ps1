@@ -42,7 +42,7 @@ function FOS_Port_CFG_Details {
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
         if($FOS_Port -ne ""){
-            $FOS_PortInfo = plink $UserName@$SwitchIP -pw $FOS_pw -batch "portcfgshow $FOS_Port"
+            #$FOS_PortInfo = plink $UserName@$SwitchIP -pw $FOS_pw -batch "portcfgshow $FOS_Port"
             $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portcfgshow $FOS_Port"
         }elseif($FOS_PortRange -ne ""){
             $FOS_PortInfo = ssh $UserName@$($SwitchIP) "portcfgshow -i $FOS_PortRange"
