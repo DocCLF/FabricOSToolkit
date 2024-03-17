@@ -2,6 +2,9 @@ using namespace System.Net
 
 function FOS_SFP_Details {
     <#
+    .SYNOPSIS
+    Displays transceiver module (SFP/SFPDD/QSFP) information.
+    
     .DESCRIPTION
     Use this command to display information about Serial Identification SFPs, also known as module definition "4" SFPs. 
     These SFPs provide extended information that describes the SFP capabilities, interfaces, manufacturer, and other information.
