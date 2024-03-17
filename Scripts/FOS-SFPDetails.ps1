@@ -7,7 +7,7 @@ function FOS_SFP_Details {
     These SFPs provide extended information that describes the SFP capabilities, interfaces, manufacturer, and other information.
 
     .EXAMPLE
-    Display trunking information for a switch:
+    To display SFPs on a Brocade switch:
     FOS_SFP_Details -UserName admin -SwitchIP 10.10.10.25
 
     To display SFP information including SFP health parameters:
@@ -15,9 +15,6 @@ function FOS_SFP_Details {
 
     Specifies the number of the port for which to display the SFP information, relative to its slot for bladed systems. 
     FOS_SFP_Details -UserName admin -SwitchIP 10.10.10.25 -FOS_Port 1
-
-    Use switchShow for a list of valid ports. This operand is optional; if omitted, this command displays a summary of all SFPs on the switch.
-    FOS_Switch_Show -UserName admin -SwitchIP 10.10.10.25
 
     .LINK
     Brocade® Fabric OS® Command Reference Manual, 9.2.x
@@ -43,9 +40,9 @@ function FOS_SFP_Details {
     }
     process{
         Write-Debug -Message "Process block |$(Get-Date)"
-        if($FOS_health -ne ""){
-            $FOS_SFPInfo = ssh $UserName@$($SwitchIP) "sfpshow $FOS_health " 
-        }elseif ($FOS_Port -ne "") {
+        if($FOS_health -like "y*"){
+            $FOS_SFPInfo = ssh $UserName@$($SwitchIP) "sfpshow -health " 
+        }elseif ($FOS_Port -ge 0) {
             $FOS_SFPInfo = ssh $UserName@$($SwitchIP) "sfpshow $FOS_Port " 
         }else{
             $FOS_SFPInfo = ssh $UserName@$($SwitchIP) "sfpshow"
@@ -55,6 +52,6 @@ function FOS_SFP_Details {
         Write-Debug -Message "End block |$(Get-Date)"
         $FOS_SFPInfo
         Write-Debug -Message "Resault: $FOS_SFPInfo |$(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 }
