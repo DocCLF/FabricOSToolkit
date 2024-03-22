@@ -134,7 +134,7 @@ function FOS_Port_Perf_Show {
         Write-Debug -Message "End block |$(Get-Date)"
         $FOS_PortInfo
         Write-Debug -Message "Resault: $FOS_PortInfo |$(Get-Date)"
-        Clear-Variable FOS* -Scope Local;
+        Clear-Variable FOS* -Scope Global;
     }
 }
 
