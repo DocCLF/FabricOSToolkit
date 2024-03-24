@@ -1,46 +1,38 @@
-<# 
-At this time this is only a test or idea how to create a FOS Dashboard based on the FOS-Functions.
-This File needs the PSwriteHTML Module!
-#>
-
 
 # there a lot of "errors" in combination with substring Parameter, thats why "silentlycontinue"
 $ErrorActionPreference="SilentlyContinue"
 
-# Hashtable for basic switch infos
-$FOS_SwBasicDetails =@{}
+#region Hashtables
+<#--------- Hashtable for BasicSwitch Info ------------#>
+$FOS_SwGeneralInfos =[ordered]@{}
+<#----- Hashtable Unique information of the switch ----#>
+$FOS_SwBasicInfos =[ordered]@{}
+#endregion
 
+
+<#--------------------Test maybe for later use -------------------#>
+# the line below is only a test maybe usfull for later to check if one or more FIDs online at one switch
+$FOS_LoSw_CFG = (($FOS_advInfo | Select-String -Pattern 'FID:\s(\d+)$' -AllMatches).Matches.Value) -replace '^(\w+:\s)',''
+<#---------------------------------------#>
+
+
+#region Switchshow
+
+# Collect some information for the Hastable, which is used for Basic SwitchInfos
 $FOS_advInfo = Get-Content -Path ".\ip_vers.txt" |Select-Object -Skip 2
-
 # Select all needed Infos
 $FOS_FW_Info = ($FOS_advInfo | Select-String -Pattern '([v?][\d]\.[\d+]\.[\d]\w)$' -AllMatches).Matches.Value |Select-Object -Unique
-$FOS_IP_AddrCFG = ($FOS_advInfo | Select-String -Pattern '(?:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3});','(?:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})').Matches.Value |Select-Object -Unique
+$FOS_IP_AddrCFG = ($FOS_advInfo | Select-String -Pattern '(?:[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})').Matches.Value |Select-Object -Unique
 $FOS_DHCP_CFG = (($FOS_advInfo | Select-String -Pattern '\s(\w+)$' -AllMatches).Matches.Value |Select-Object -Unique).Trim()
 
-# add the needed Infos into the Hashtable
-$FOS_SwBasicDetails.Add('FOS Version',$FOS_FW_Info)
-$FOS_SwBasicDetails.Add('Ethernet IP Address',$FOS_IP_AddrCFG[0])
-$FOS_SwBasicDetails.Add('Ethernet Subnet mask',$FOS_IP_AddrCFG[1])
-$FOS_SwBasicDetails.Add('Gateway IP Address',$FOS_IP_AddrCFG[2])
-$FOS_SwBasicDetails.Add('DHCP',$FOS_DHCP_CFG)
-
-
-
-# Used for some vars an other stuff
-$FOS_pbs_temp = plink insight@192.168.107.40 -pw Insight0Mon -batch "portbuffershow" 
+#$FOS_pbs_temp = plink insight@192.168.107.40 -pw Insight0Mon -batch "portbuffershow" 
 $FOS_swsh_temp = Get-Content -Path ".\swsh.txt"
 $FOS_SwBasicPortDetails=@()
 $FOS_usedPorts =@()
-<#switchshow#>
 foreach($FOS_linebyLine in $FOS_swsh_temp){
 
         # select some Basic Switch Infos
-        $FOS_temp += Select-String -InputObject $FOS_linebyLine -Pattern 'switchName:\s(.*)$','switchType:\s(.*)$','switchState:\s(.*)$','switchRole:\s(.*)$','switchDomain:\s(.*)$','switchWwn:\s(.*)$','Fabric Name:\s(.*)$' |ForEach-Object {$_.Matches.Groups[1].Value}
-        
-        # workaround for zoning info, becaus there is a prob with the regex or anything else, the problem come only with WWN combination
-        if([string]::IsNullOrEmpty($FOS_tempzone)){
-            $FOS_tempzone += Select-String -InputObject $FOS_linebyLine -Pattern '\D\((\w+)\)$' |ForEach-Object {$_.Matches.Groups[1].Value}
-        }
+        $FOS_temp += Select-String -InputObject $FOS_linebyLine -Pattern 'switchType:\s(.*)$','switchState:\s(.*)$','switchRole:\s(.*)$' |ForEach-Object {$_.Matches.Groups[1].Value}
 
         # Split FOS_temp in parts, the regex \s means any whitespace character, + means one or more
         $FOS_SwInfo = $FOS_temp.Trim() -split ("\s+")
@@ -54,17 +46,15 @@ foreach($FOS_linebyLine in $FOS_swsh_temp){
         }
         
         # add more Basic Infos of the switch to the Hashtable
-        $FOS_SwBasicDetails=@{
-            'Swicht Name'=$FOS_SwInfo[0]
-            'Switch Type'=$FOS_SwInfo[1]
-            'Brocade Product Name'=$FOS_SwHw
-            'Switch State'=$FOS_SwInfo[2]
-            'Switch Role'=$FOS_SwInfo[3]
-            'Switch Domain'=$FOS_SwInfo[4]
-            'Switch WWN'=$FOS_SwInfo[5]
-            'Fabric Name'=$FOS_SwInfo[6]
-            'Active ZonenCFG'=$FOS_tempzone
-        }
+        $FOS_SwGeneralInfos.Add('Brocade Product Name',$FOS_SwHw)
+        $FOS_SwGeneralInfos.Add('FOS Version',$FOS_FW_Info)
+        $FOS_SwGeneralInfos.Add('Ethernet IP Address',$FOS_IP_AddrCFG[0])
+        $FOS_SwGeneralInfos.Add('Ethernet Subnet mask',$FOS_IP_AddrCFG[1])
+        $FOS_SwGeneralInfos.Add('Gateway IP Address',$FOS_IP_AddrCFG[2])
+        $FOS_SwGeneralInfos.Add('DHCP',$FOS_DHCP_CFG)
+        $FOS_SwGeneralInfos.Add('Switch State',$FOS_SwInfo[2])
+        $FOS_SwGeneralInfos.Add('Switch Role',$FOS_SwInfo[3])
+        
         
         # Build the Portsection of switchshow
         if($FOS_linebyLine -match '^\s+\d+'){
@@ -82,8 +72,30 @@ foreach($FOS_linebyLine in $FOS_swsh_temp){
         # if the Portnumber is not empty and there is a SFP pluged in, push the Port in the FOS_usedPorts array
         if(($FOS_SWsh.Port -ne "") -and ($FOS_SWsh.Media -eq "id")){$FOS_usedPorts += $FOS_SWsh.Port}
 }
+<#----------------------- Switchshow ------------------#>
+#endregion
 
-<#Porterrshow#>
+
+#region Logical Switch/ FID Infos
+<#----------- Unique information of the switch -----------#>
+Clear-Variable -Name FOS_advInfo
+$FOS_advInfo = Get-Content -Path ".\lscfg.txt"
+$FOS_LoSw_CFG = (($FOS_advInfo | Select-String -Pattern 'FID:\s(\d+)$','SwitchType:\s(\w+)$','DomainID:\s(\d+)$','SwitchName:\s(.*)$','FabricName:\s(\w+)$' -AllMatches).Matches.Value) -replace '^(\w+:\s)',''
+
+$FOS_LoSwAdd_CFG = ((($FOS_swsh_temp | Select-String -Pattern '\D\((\w+)\)$','switchWwn:\s(.*)$' -AllMatches).Matches.Value) -replace '^(\w+:\s)','').Trim()
+
+$FOS_SwBasicInfos.Add('Swicht Name',$FOS_LoSw_CFG[3])
+$FOS_SwBasicInfos.Add('Active ZonenCFG',$FOS_LoSwAdd_CFG[1].Trim('( )'))
+$FOS_SwBasicInfos.Add('FabricName',$FOS_LoSw_CFG[4])
+$FOS_SwBasicInfos.Add('DomainID',$FOS_LoSw_CFG[2])
+$FOS_SwBasicInfos.Add('SwitchType',$FOS_LoSw_CFG[1])
+$FOS_SwBasicInfos.Add('SwitchWwn',$FOS_LoSwAdd_CFG[0])
+$FOS_SwBasicInfos.Add('Fabric ID:',$FOS_LoSw_CFG[0])
+<#----------- Logical Switch/ FID Infos -----------#>
+#endregion
+
+
+#region Porterrshow
 $FOS_perrsh_temp = Get-Content -Path ".\porteersh.txt" |Select-Object -Skip 2
 $FOS_usedPortsfiltered =@()
 foreach ($FOS_port in $FOS_perrsh_temp){
@@ -117,13 +129,13 @@ foreach ($FOS_port in $FOS_perrsh_temp){
         }
     }
 }
+<#------------------- Porterrshow -----------------------#>
+#endregion
 
-
+#region Portbuffershow
 # $test = ssh admin@192.168.249.81 "portbuffershow" 
 $FOS_Temp_var = $FOS_pbs_temp |Select-Object -Skip 3
-
-<#Portbuffershow#>
-$FOS_pbs_temp = plink insight@192.168.107.40 -pw Insight0Mon -batch "portbuffershow" 
+#$FOS_pbs_temp = plink insight@192.168.107.40 -pw Insight0Mon -batch "portbuffershow" 
 $FOS_pbs_temp = Get-Content -Path ".\pbs_l.txt"
 $FOS_Temp_var = $FOS_pbs_temp |Select-Object -Skip 3
 $FOS_pbs =@()
@@ -143,23 +155,48 @@ foreach ($FOS_thisLine in $FOS_Temp_var) {
     $FOS_pbs += $FOS_PortBuff
 
 }
+<#------------------- Portbuffershow -----------------------#>
+#endregion
 
+
+#region HTML - Creation
 Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
     Tab -Name "Info of $($FOS_SwInfo[0])" {
         Section -Name "More Info 1" -Invisible {
             Section -Name "Basic Information" {
-                Table -HideFooter -HideButtons -DisablePaging -DisableSearch -DataTable $FOS_SwBasicDetails
+                Table -HideFooter -HideButtons -DisablePaging -DisableSearch -DataTable $FOS_SwGeneralInfos
+            }
+            Section -Name "FID Information" {
+                Table -HideFooter -HideButtons -DisablePaging -DisableSearch -DataTable $FOS_SwBasicInfos
             }
             Section -Name "Basic Port Information" {
-                Table -PagingLength 10 -HideFooter -DataTable $FOS_SwBasicPortDetails
+                New-HTMLChart{
+                    New-ChartPie -Name "Available Ports" -Value $($FOS_SwBasicPortDetails.Count) -Color Green
+                    New-ChartPie -Name "Used Ports" -Value $($FOS_usedPorts.count) -Color Red
+                }
+            }
+            Section -Name "Used Port Speed Allocation" {
+                New-HTMLChart{
+                    New-ChartPie -Name "64G" -Value $(($FOS_SwBasicPortDetails |Where-Object {$_.Speed -eq "N64"}).count)
+                    New-ChartPie -Name "32G" -Value $(($FOS_SwBasicPortDetails |Where-Object {$_.Speed -eq "N32"}).count)
+                    New-ChartPie -Name "16G" -Value $(($FOS_SwBasicPortDetails |Where-Object {$_.Speed -eq "N16"}).count)
+                    New-ChartPie -Name "8G" -Value $(($FOS_SwBasicPortDetails |Where-Object {$_.Speed -eq "N8"}).count)
+                    New-ChartPie -Name "4G" -Value $(($FOS_SwBasicPortDetails |Where-Object {$_.Speed -eq "N4"}).count)
+                }
             }
         }
         Section -Name "Port Info" -Invisible{
-            Section -Name "Port Error Show" -CanCollapse {
-                Table -HideFooter -DataTable $FOS_usedPortsfiltered
+            Section -Name "Port Basic Show" -CanCollapse {
+                Table -HideFooter -DataTable $FOS_SwBasicPortDetails
             }
-            Section -name "Port Buffer Show" -CanCollapse   {
+            Section -Name "Port Buffer Show" -CanCollapse {
                 Table -HideFooter -DataTable $FOS_pbs
+            }
+
+        }
+        Section -Name "Port Info" -Invisible{
+            Section -name "Port Port Error Show" -CanCollapse   {
+                Table -HideFooter -DataTable $FOS_usedPortsfiltered
             }
         }
     }
@@ -174,6 +211,9 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
     }
 } -Show
 
+#endregion
 
 
+#region CleanUp
 Clear-Variable FOS* -Scope Global;
+#endregion
