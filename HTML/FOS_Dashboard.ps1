@@ -89,7 +89,7 @@ $FOS_SwBasicInfos.Add('Active ZonenCFG',$FOS_LoSwAdd_CFG[1].Trim('( )'))
 $FOS_SwBasicInfos.Add('FabricName',$FOS_LoSw_CFG[4])
 $FOS_SwBasicInfos.Add('DomainID',$FOS_LoSw_CFG[2])
 $FOS_SwBasicInfos.Add('SwitchType',$FOS_LoSw_CFG[1])
-$FOS_SwBasicInfos.Add('SwitchWwn',$FOS_LoSwAdd_CFG[0])
+$FOS_SwBasicInfos.Add('Switch WWN',$FOS_LoSwAdd_CFG[0])
 $FOS_SwBasicInfos.Add('Fabric ID:',$FOS_LoSw_CFG[0])
 <#----------- Logical Switch/ FID Infos -----------#>
 #endregion
@@ -190,7 +190,10 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
         }
         Section -Name "Port Info" -Invisible{
             Section -Name "Port Basic Show" -CanCollapse {
-                Table -HideFooter -DataTable $FOS_SwBasicPortDetails
+                Table -HideFooter -DataTable $FOS_SwBasicPortDetails{
+                    TableConditionalFormatting -Name 'State' -ComparisonType string -Operator eq -Value 'Online' -BackgroundColor LightGreen -Row
+                    TableConditionalFormatting -Name 'State' -ComparisonType string -Operator eq -Value 'No_Module' -BackgroundColor LightGray -Row
+                }
             }
             Section -Name "Port Buffer Show" -CanCollapse {
                 Table -HideFooter -DataTable $FOS_pbs
@@ -198,8 +201,10 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
 
         }
         Section -Name "Port Info" -Invisible{
-            Section -name "Port Port Error Show" -CanCollapse   {
-                Table -HideFooter -DataTable $FOS_usedPortsfiltered
+            Section -name "Port Error Show" -CanCollapse   {
+                Table -HideFooter -DataTable $FOS_usedPortsfiltered{
+                    TableConditionalFormatting -Name 'disc_c3' -ComparisonType number -Operator gt -Value 200 -BackgroundColor LightGoldenrodYellow
+                }
             }
         }
     }
