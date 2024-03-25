@@ -149,17 +149,17 @@ $FOS_Temp_var = $FOS_pbs_temp |Select-Object -Skip 3
 $FOS_pbs =@()
 foreach ($FOS_thisLine in $FOS_Temp_var) {
     #create a var and pipe some objects in and fill them with some data
-    $FOS_PortBuff = "" | Select-Object UsedPort,PortType,LX_Mode,Max_ResvBuffer,Tx,Rx,Bufffer_Usage,Buffer_Needed,Link_Distance,Remaining_Buffers
-    $FOS_PortBuff.UsedPort = $FOS_thisLine.Substring(0,4).Trim()
-    $FOS_PortBuff.PortType = $FOS_thisLine.Substring(11,4).Trim()
+    $FOS_PortBuff = "" | Select-Object Port,Type,Mode,Max_Resv,Tx,Rx,Usage,Buffers,Distance,Buffer
+    $FOS_PortBuff.Port = $FOS_thisLine.Substring(0,4).Trim()
+    $FOS_PortBuff.Type = $FOS_thisLine.Substring(11,4).Trim()
     $FOS_PortBuff.LX_Mode = $FOS_thisLine.Substring(17,4).Trim()
-    $FOS_PortBuff.Max_ResvBuffer = $FOS_thisLine.Substring(27,7).Trim()
+    $FOS_PortBuff.Max_Resv = $FOS_thisLine.Substring(27,7).Trim()
     $FOS_PortBuff.Tx = $FOS_thisLine.Substring(36,14).Trim()
     $FOS_PortBuff.Rx = $FOS_thisLine.Substring(50,14).Trim()
-    $FOS_PortBuff.Buffer_Usage = $FOS_thisLine.Substring(67,6).Trim()
-    $FOS_PortBuff.Buffer_Needed = $FOS_thisLine.Substring(75,7).Trim()
-    $FOS_PortBuff.Link_Distance = $FOS_thisLine.Substring(85,6).Trim(" ","-")
-    $FOS_PortBuff.Remaining_Buffers = $FOS_thisLine.Substring(95, 6).Trim()
+    $FOS_PortBuff.Usage = $FOS_thisLine.Substring(67,6).Trim()
+    $FOS_PortBuff.Buffers = $FOS_thisLine.Substring(75,7).Trim()
+    $FOS_PortBuff.Distance = $FOS_thisLine.Substring(85,6).Trim(" ","-")
+    $FOS_PortBuff.Buffer = $FOS_thisLine.Substring(95, 6).Trim()
     $FOS_pbs += $FOS_PortBuff
 
 }
@@ -203,7 +203,17 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
                 }
             }
             Section -Name "Port Buffer Show" -CanCollapse {
-                Table -HideFooter -DataTable $FOS_pbs
+                Table -HideFooter -DataTable $FOS_pbs {
+                    EmailTableHeader -Names 'Port' -Title 'User' 
+                    EmailTableHeader -Names 'Type' -Title 'Port' 
+                    EmailTableHeader -Names 'Mode' -Title 'Lx'
+                    EmailTableHeader -Names 'Max_Resv' -Title 'Buffers'
+                    EmailTableHeader -Names 'Tx','Rx' -Title 'Avg Buffer Usage & FrameSize'
+                    EmailTableHeader -Names 'Usage' -Title 'Buffers' 
+                    EmailTableHeader -Names 'Buffers' -Title 'Needed' 
+                    EmailTableHeader -Names 'Distance' -Title 'Link' 
+                    EmailTableHeader -Names 'Buffer' -Title 'Remaining' 
+                }
             }
 
         }
