@@ -38,10 +38,10 @@ foreach($FOS_linebyLine in $FOS_swsh_temp){
         $FOS_SwInfo = $FOS_temp.Trim() -split ("\s+")
 
         # make the Switch Typ readable without using google ;)
-        if($FOS_SwInfo[1] -ne ""){
-            switch ($FOS_SwInfo[1]) {
+        if($FOS_SwInfo[0] -ne ""){
+            switch ($FOS_SwInfo[0]) {
                 {$_ -like "173*"}  { $FOS_SwHw = "Brocade G630" }
-                Default {$FOS_SwHw = $FOS_SwInfo[1]}
+                Default {$FOS_SwHw = $FOS_SwInfo[0]}
             }
         }
         
@@ -52,8 +52,8 @@ foreach($FOS_linebyLine in $FOS_swsh_temp){
         $FOS_SwGeneralInfos.Add('Ethernet Subnet mask',$FOS_IP_AddrCFG[1])
         $FOS_SwGeneralInfos.Add('Gateway IP Address',$FOS_IP_AddrCFG[2])
         $FOS_SwGeneralInfos.Add('DHCP',$FOS_DHCP_CFG)
-        $FOS_SwGeneralInfos.Add('Switch State',$FOS_SwInfo[2])
-        $FOS_SwGeneralInfos.Add('Switch Role',$FOS_SwInfo[3])
+        $FOS_SwGeneralInfos.Add('Switch State',$FOS_SwInfo[1])
+        $FOS_SwGeneralInfos.Add('Switch Role',$FOS_SwInfo[2])
         
         
         # Build the Portsection of switchshow
@@ -103,6 +103,7 @@ foreach ($FOS_port in $FOS_perrsh_temp){
     $FOS_PortErr = "" | Select-Object Port,frames_tx,frames_rx,enc_in,crc_err,crc_g_eof,too_shrt,too_long,bad_eof,enc_out,disc_c3,link_fail,loss_sync,loss_sig,f_rejected,f_busied,c3timeout_tx,c3timeout_rx,psc_err,uncor_err
     #select the ports
     $FOS_PortErr.Port = $FOS_port.Substring(0,3).Trim()
+    [int]$FOS_PortErr.disc_c3 = $FOS_port.Substring(69,6).Trim()
     #check if the port is "active", if it is fill the objects
     foreach($FOS_usedPortstemp in $FOS_usedPorts){
         if($FOS_PortErr.Port -eq $FOS_usedPortstemp){
@@ -169,6 +170,8 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
             Section -Name "FID Information" {
                 Table -HideFooter -HideButtons -DisablePaging -DisableSearch -DataTable $FOS_SwBasicInfos
             }
+        }
+        Section -Name "bluber" -Invisible{
             Section -Name "Basic Port Information" {
                 New-HTMLChart{
                     New-ChartPie -Name "Available Ports" -Value $($FOS_SwBasicPortDetails.Count) -Color Green
