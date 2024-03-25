@@ -40,7 +40,14 @@ foreach($FOS_linebyLine in $FOS_swsh_temp){
         # make the Switch Typ readable without using google ;)
         if($FOS_SwInfo[0] -ne ""){
             switch ($FOS_SwInfo[0]) {
+                {$_ -like "170*"}  { $FOS_SwHw = "Brocade G610" }
+                {$_ -like "162*"}  { $FOS_SwHw = "Brocade G620" }
+                {$_ -like "183*"}  { $FOS_SwHw = "Brocade G620" }
                 {$_ -like "173*"}  { $FOS_SwHw = "Brocade G630" }
+                {$_ -like "184*"}  { $FOS_SwHw = "Brocade G630" }
+                {$_ -like "178*"}  { $FOS_SwHw = "Brocade 7810 Extension Switch" }
+                {$_ -like "181*"}  { $FOS_SwHw = "Brocade G720" }
+                {$_ -like "189*"}  { $FOS_SwHw = "Brocade G730" }
                 Default {$FOS_SwHw = $FOS_SwInfo[0]}
             }
         }
