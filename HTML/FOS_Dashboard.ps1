@@ -131,7 +131,7 @@ foreach ($FOS_port in $FOS_perrsh_temp){
         $FOS_PortErr.f_busied = $FOS_port.Substring(104, 6).Trim()
         $FOS_PortErr.c3timeout_tx = $FOS_port.Substring(111, 6).Trim()
         $FOS_PortErr.c3timeout_rx = $FOS_port.Substring(117, 6).Trim()
-        $FOS_PortErr.psc_err = $FOS_port.Substring(124, 6).Trim()
+        $FOS_PortErr.psc_err = $FOS_port.Substring(124, 7).Trim()
         $FOS_PortErr.uncor_err = $FOS_port.Substring(131).Trim()
         $FOS_usedPortsfiltered += $FOS_PortErr
         }
@@ -221,6 +221,8 @@ Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
             Section -name "Port Error Show" -CanCollapse   {
                 Table -HideFooter -DataTable $FOS_usedPortsfiltered{
                     TableConditionalFormatting -Name 'disc_c3' -ComparisonType number -Operator gt -Value 200 -BackgroundColor LightGoldenrodYellow
+                    TableConditionalFormatting -Name 'link_fail' -ComparisonType number -Operator gt -Value 5 -BackgroundColor LightGoldenrodYellow
+                    TableConditionalFormatting -Name 'loss_sig' -ComparisonType number -Operator gt -Value 5 -BackgroundColor LightGoldenrodYellow
                 }
             }
         }
