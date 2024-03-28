@@ -145,15 +145,26 @@ function FOS_Zone_Details {
         if(($FOS_ZoneEntrys.count) -ge 1){
             #Create PowerShell Objects out of the Aliases
             foreach ($FOS_ZoneEntry in $FOS_ZoneEntrys) {
-                $FOS_TempCollection = "" | Select-Object Zone,Alias
+                $FOS_TempCollection = "" | Select-Object Zone,Alias,AliasLine2,AliasLine3,AliasLine4,AliasLine5
                 if (($FOS_ZoneList[$FOS_ZoneEntry].trim() -split "`t").count -gt 2){
                     #Line has Alias and WWN on same line
                     $FOS_TempCollection.Zone = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[1]
                     $FOS_TempCollection.Alias = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[2]
+                    if (($FOS_ZoneList[$FOS_ZoneEntry].trim() -split "`t").count -gt 3){
+                    $FOS_TempCollection.AliasLine2 = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[3]
+                    }
                 }else{
                     #Line has Alias and WWN on adjascent lines
                     $FOS_TempCollection.Zone = (($FOS_ZoneList[$FOS_ZoneEntry]).trim() -split "`t")[1]
                     $FOS_TempCollection.Alias = $FOS_ZoneList[$FOS_ZoneEntry+1].trim()
+                    if(!($FOS_ZoneList[$FOS_ZoneEntry+2] -match '^ zone')){$FOS_TempCollection.AliasLine2 = $FOS_ZoneList[$FOS_ZoneEntry+2].trim()}
+                    if(!($FOS_ZoneList[$FOS_ZoneEntry+3] -match '^ zone')){$FOS_TempCollection.AliasLine3 = $FOS_ZoneList[$FOS_ZoneEntry+3].trim()}
+                    if(!($FOS_ZoneList[$FOS_ZoneEntry+4] -match '^ zone')){$FOS_TempCollection.AliasLine4 = $FOS_ZoneList[$FOS_ZoneEntry+4].trim()}
+                    if(!($FOS_ZoneList[$FOS_ZoneEntry+5] -match '^ zone')){$FOS_TempCollection.AliasLine5 = $FOS_ZoneList[$FOS_ZoneEntry+5].trim()}
+                    Write-Debug -Message "Zone:`n $($FOS_TempCollection.Zone)`nZoneEntry:`n $FOS_ZoneEntry"
+                    Write-Debug -Message "Alias1:`n$($FOS_TempCollection.Alias)`nZoneEntry:`n $($FOS_ZoneEntry+1)"
+                    Write-Debug -Message "Alias2:`n$($FOS_TempCollection.AliasLine2)`nZoneEntry:`n$($FOS_ZoneEntry+2)"
+                    #$FOS_TempCollection.AliasLine2 = $FOS_ZoneList[$FOS_ZoneEntry+2].trim()
                 }
                 #remove the colons to make it easier to compare to the PowerCLI output
                 #$FOS_TempCollection.WWN = ($FOS_TempCollection.WWN).replace(":","")
