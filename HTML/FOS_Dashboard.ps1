@@ -169,7 +169,7 @@ foreach ($FOS_thisLine in $FOS_Temp_var) {
 
 #region HTML - Creation
 Dashboard -Name "Brocade Testboard" -FilePath $Env:TEMP\Dashboard.html {
-    Tab -Name "Info of $($FOS_SwInfo[0])" {
+    Tab -Name "Info of $($FOS_SwBasicInfos[0])" {
         Section -Name "More Info 1" -Invisible {
             Section -Name "Basic Information" {
                 Table -HideFooter -HideButtons -DisablePaging -DisableSearch -DataTable $FOS_SwGeneralInfos
