@@ -38,10 +38,10 @@ function FOS_Zone_Details {
         https://techdocs.broadcom.com/us/en/fibre-channel-networking/fabric-os/fabric-os-commands/9-2-x/Fabric-OS-Commands.html
         #>
     param (
-       <#[Parameter(Mandatory,ValueFromPipeline)]
+        [Parameter(Mandatory,ValueFromPipeline)]
         [string]$UserName,
         [Parameter(Mandatory,ValueFromPipeline)]
-        [ipaddress]$SwitchIP,#>
+        [ipaddress]$SwitchIP,
         [Parameter(ValueFromPipeline)]
         [ValidateSet("ic","validate","peerzone","alias")]
         [string]$FOS_Operand,
@@ -57,7 +57,6 @@ function FOS_Zone_Details {
         Write-Debug -Message "Begin block |$(Get-Date)"
         # create some var
 
-        #return $FOS_ZoneList
         $FOS_ZoneCollection = @()
 
         Write-Debug -Message "Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCollection "
@@ -69,70 +68,41 @@ function FOS_Zone_Details {
         switch ($FOS_Operand) {
             "ic" {
 
-                #$FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --ic ""$FOS_ZoneName"""
+                $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --ic ""$FOS_ZoneName"""
 
-                $FOS_ZoneCount = $FOS_ZoneList.count - 1
-
-                0..$FOS_ZoneCount |ForEach-Object {
-                    if($FOS_ZoneList[$_] -match '^ zone'){
-                        $FOS_ZoneEntrys += $_
-                    }
-                }
                 Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
 
             }
             "validate" { 
-                <#if($FOS_Mode -le 2){
+                if($FOS_Mode -le 2){
                     Write-Host "If this command fails, then it is a known bug under FOS 9.x.x,`n if this is the case then use the command without FOS_Mode parameter" -ForegroundColor Red
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" ,mode $FOS_Mode"
                 }else{
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --validate ""$FOS_ZoneName"" "
                 }
-                #>
-                $FOS_ZoneCount = $FOS_ZoneList.count - 1
-
-                0..$FOS_ZoneCount |ForEach-Object {
-                    if($FOS_ZoneList[$_] -match '^ zone'){
-                        $FOS_ZoneEntrys += $_
-                    }
-                }
                 
                 Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, FilterMode $FOS_Mode`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
              }
             "peerzone" { 
-                <#if($FOS_Mode -le 2){
+                if($FOS_Mode -le 2){
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --peerzone all -mode $FOS_Mode"
                 }else{
                     $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --peerzone all "
-                }#>
-
-                $FOS_ZoneCount = $FOS_ZoneList.count - 1
-
-                0..$FOS_ZoneCount |ForEach-Object {
-                    if($FOS_ZoneList[$_] -match '^ zone'){
-                        $FOS_ZoneEntrys += $_
-                    }
                 }
                 
                 Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchZoneName: $FOS_ZoneName`n, FilterMode $FOS_Mode`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
              }
             "alias" { 
-                #$FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --alias ""$FOS_AliasName"""
-                $FOS_ZoneCount = $FOS_ZoneList.count - 1
 
-                0..$FOS_ZoneCount |ForEach-Object {
-                    if($FOS_ZoneList[$_] -match '^ zone'){
-                        $FOS_ZoneEntrys += $_
-                    }
-                }
+                $FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow --alias ""$FOS_AliasName"""
+
                 Write-Debug -Message "FOS_Operand $FOS_Operand`n, SearchAliasName: $FOS_AliasName`n, Zoneliste`n $FOS_ZoneList, `nZoneEntrys`n $FOS_ZoneEntrys, `nZoneCount`n $FOS_ZoneCount "
              }
             Default {
 
-                #$FOS_ZoneList = ssh $UserName@$($SwitchIP) "zoneshow"
-
-                $FOS_BasicZoneList = Get-Content -Path ".\zshow.txt"
-                #$FOS_ZoneCount = $FOS_ZoneList.count
+                #$FOS_BasicZoneList = Get-Content -Path ".\zshow.txt"
+                $FOS_BasicZoneList = ssh $UserName@$($SwitchIP) "zoneshow"
+                $FOS_ZoneCount = $FOS_BasicZoneList.count
 
                 0..$FOS_ZoneCount |ForEach-Object {
                     # Pull only the effective ZoneCFG back into ZoneList
@@ -149,7 +119,7 @@ function FOS_Zone_Details {
         Start-Sleep -Seconds 3;
 
         # Creat a List of Aliases with WWPN based on switch-case decision
-        if(($FOS_ZoneList.count) -ge 5){
+        if(($FOS_ZoneList.count) -ge 4){
             #Create PowerShell Objects out of the Aliases
             #$FOS_DoUntilLoop = $true
             foreach ($FOS_Zone in $FOS_ZoneList) {
@@ -194,11 +164,11 @@ function FOS_Zone_Details {
                 }
                 $FOS_ZoneCollection += $FOS_TempCollection
             }
-            $FOS_ZoneCollection
 
             Write-Host "Here the list of Zone with Alias:`n" -ForegroundColor Green
+            $FOS_ZoneCollection
 
-            Write-Debug -Message "End of Process block |$(Get-Date)"
+            Write-Debug -Message "$FOS_ZoneCollection `nEnd of Process block |$(Get-Date)"
 
         }else {
              <# Action when all if and elseif conditions are false #>
