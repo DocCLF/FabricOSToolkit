@@ -107,7 +107,7 @@ function FOS_Zone_Details {
                 0..$FOS_ZoneCount |ForEach-Object {
                     # Pull only the effective ZoneCFG back into ZoneList
                     if($FOS_BasicZoneList[$_] -match '^Effective'){
-                        $FOS_ZoneList = Get-Content -Path ".\zshow.txt" |Select-Object -Skip $_
+                        $FOS_ZoneList = $FOS_BasicZoneList |Select-Object -Skip $_
                         break
                     }
                 }
@@ -160,7 +160,7 @@ function FOS_Zone_Details {
                     #Write-Host "$FOS_AliName`n, $FOS_Zone" -ForegroundColor DarkYellow
                 }else{
                     <# Action when all if and elseif conditions are false #>
-                    `n
+                    Write-Host "`n"
                 }
                 $FOS_ZoneCollection += $FOS_TempCollection
             }
