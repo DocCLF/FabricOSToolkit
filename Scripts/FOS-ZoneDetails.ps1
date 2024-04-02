@@ -136,7 +136,7 @@ function FOS_Zone_Details {
                     foreach($FOS_BasicZoneListTemp in $FOS_BasicZoneList){
                         do {
                             if($FOS_BasicZoneListTemp -match '^ alias:\s(.*)'){
-                                Write-Host $FOS_BasicZoneListTemp -ForegroundColor Magenta
+                                #Write-Host $FOS_BasicZoneListTemp -ForegroundColor Magenta
                                 $FOS_TeampAliasName = $FOS_BasicZoneListTemp
                                 $FOS_TempAliasName = $FOS_TeampAliasName -replace '^ alias:\s',''.Trim()
                                 break
