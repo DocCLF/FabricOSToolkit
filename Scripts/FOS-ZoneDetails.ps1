@@ -121,14 +121,13 @@ function FOS_Zone_Details {
         # Creat a List of Aliases with WWPN based on switch-case decision
         if(($FOS_ZoneList.count) -ge 4){
             #Create PowerShell Objects out of the Aliases
-            #$FOS_DoUntilLoop = $true
             foreach ($FOS_Zone in $FOS_ZoneList) {
                 $FOS_TempCollection = "" | Select-Object Zone,WWPN,Alias
                 # Get the ZoneName
                 if(Select-String -InputObject $FOS_Zone -Pattern '^ zone:\s+(.*)'){
                     $FOS_AliName = Select-String -InputObject $FOS_Zone -Pattern '^ zone:\s+(.*)' |ForEach-Object {$_.Matches.Groups[1].Value}
                     $FOS_TempCollection.Zone = $FOS_AliName.Trim()
-                    #Write-Host "$FOS_TempCollection" -ForegroundColor Magenta
+                    Write-Debug -Message "$FOS_TempCollection"
                 }elseif(Select-String -InputObject $FOS_Zone -Pattern '(:[\da-f]{2}:[\da-f]{2}:[\da-f]{2})$') {
                     $FOS_AliWWN = $FOS_Zone
                     $FOS_TempCollection.WWPN = $FOS_AliWWN.Trim()
@@ -136,14 +135,14 @@ function FOS_Zone_Details {
                     foreach($FOS_BasicZoneListTemp in $FOS_BasicZoneList){
                         do {
                             if($FOS_BasicZoneListTemp -match '^ alias:\s(.*)'){
-                                #Write-Host $FOS_BasicZoneListTemp -ForegroundColor Magenta
+                                Write-Debug -Message "$FOS_BasicZoneListTemp "
                                 $FOS_TeampAliasName = $FOS_BasicZoneListTemp
                                 $FOS_TempAliasName = $FOS_TeampAliasName -replace '^ alias:\s',''.Trim()
                                 break
                                 $FOS_SwInfo
                             }
                             if($FOS_BasicZoneListTemp -match ($FOS_AliWWN.Trim())){
-                                Write-Host $FOS_BasicZoneListTemp -ForegroundColor Green
+                                Write-Debug -Message " $FOS_BasicZoneListTemp "
                                 $FOS_DoUntilLoop = $false
                                 $FOS_TempCollection.Alias = $FOS_TempAliasName
                                 break
@@ -165,7 +164,7 @@ function FOS_Zone_Details {
                 $FOS_ZoneCollection += $FOS_TempCollection
             }
 
-            Write-Host "Here the list of Zone with Alias:`n" -ForegroundColor Green
+            Write-Host "Here is the list of zones with WWPNs and their corresponding aliases:" -ForegroundColor Green
             $FOS_ZoneCollection
 
             Write-Debug -Message "$FOS_ZoneCollection `nEnd of Process block |$(Get-Date)"
